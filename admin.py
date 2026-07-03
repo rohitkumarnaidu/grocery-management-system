@@ -1,72 +1,46 @@
-prod = {}
+import database
 
-#------ add a product into grocery store -----
+def get_inventory():
+    data = database.load_data()
+    return data.get("prod", {})
 
-def add_prod():
-    item = input("Enter product name: ")
-    if item not in prod:
-        pr = int(input("Enter price: "))
-        qty = int(input("Enter quantity: "))
-        l = [pr,qty]
-        prod[item] = l 
-        print("Item added successfully!","Inventory: ", prod)
-    else:
-        print("Item exists")
-        
+def add_prod(item, price, qty, category="Other"):
+    data = database.load_data()
+    item = item.lower()
+    if "prod" not in data:
+        data["prod"] = {}
+    if item not in data["prod"]:
+        data["prod"][item] = [price, qty, category]
+        database.save_data(data)
+        return True, "Item added successfully!"
+    return False, "Item already exists"
 
-#----- update price of an existing product ----
+def update_price(item, price):
+    data = database.load_data()
+    item = item.lower()
+    if item in data.get("prod", {}):
+        data["prod"][item][0] = price
+        database.save_data(data)
+        return True, "Price updated successfully!"
+    return False, "Product does not exist"
 
-def update_price():
-    item = input("Enter product name: ").lower()
-    if item in prod:
-        pr = int(input("Enter updated price of product: "))
-        prod[item][0] = pr
-        print("updated successfully!","updated products",prod)
-    else:
-        print("product does not exist")
+def update_qty(item, qty):
+    data = database.load_data()
+    item = item.lower()
+    if item in data.get("prod", {}):
+        data["prod"][item][1] = qty
+        database.save_data(data)
+        return True, "Quantity updated successfully!"
+    return False, "Product does not exist"
 
-
-#---- update quantity of an existing product ----
-
-def update_qty():
-    item = input("Enter product name: ").lower()
-    if item in prod:
-        qty = int(input("Enter updated quantity of product: "))
-        prod[item][1] = qty
-        print("updated successfully!","updated products",prod)
-    else:
-        print("product does not exist")
-
-#---- delete an existing product ----- 
-
-def delete_item():
-    item = input("Enter product name: ").lower()
-    if item in prod:
-        del prod[item]
-        print("deleted successfully!","remaining products",prod)
-    else:
-        print("product does not exist")
-
-
-
-# ------ admin menu -----
-def admin_menu():
-    print("1. Add product into inventory")
-    print("2. Update price of an existing product")
-    print("3. Update quantity of an existing product")
-    print("4. Delete an existing product from inventory")
-    print("5. Exit")
-    while True:
-        ch = int(input("Enter your choice: "))
-        if ch == 1:
-            add_prod()
-        elif ch == 2:
-            update_price()
-        elif ch == 3:
-            update_qty()
-        elif ch == 4:
-            delete_item()
-        elif ch == 5:
-            break 
-        else:
-            print("Invalid choice, choose from 1 - 5")
+def delete_item(item):
+    data = database.load_data()
+    item = item.lower()
+    if item in data.get("prod", {}):
+        del data["prod"][item]
+        # Also remove from cart if it exists
+        if "cart" in data and item in data["cart"]:
+            del data["cart"][item]
+        database.save_data(data)
+        return True, "Deleted successfully!"
+    return False, "Product does not exist"

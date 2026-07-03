@@ -1,0 +1,42 @@
+.uiverse-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+}
+
+.uiverse-btn:hover {
+  color: #ffffff;
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.uiverse-btn:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+}
+
+.uiverse-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.uiverse-btn.w-full {
+  width: 100%;
+}
