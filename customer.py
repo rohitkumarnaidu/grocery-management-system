@@ -8,8 +8,7 @@ def get_cart():
 
 def add_item(item, qty):
     data = database.load_data()
-    item = item.lower()
-    
+    item = item.strip().lower()
     if item not in data.get("prod", {}):
         return False, "Product does not exist in inventory"
         
@@ -28,7 +27,7 @@ def add_item(item, qty):
 
 def delete_item(item):
     data = database.load_data()
-    item = item.lower()
+    item = item.strip().lower()
     if item in data.get("cart", {}):
         del data["cart"][item]
         database.save_data(data)
@@ -37,7 +36,7 @@ def delete_item(item):
 
 def update_item_qty(item, qty):
     data = database.load_data()
-    item = item.lower()
+    item = item.strip().lower()
     if item in data.get("cart", {}):
         if qty <= 0:
             del data["cart"][item]
