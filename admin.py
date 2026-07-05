@@ -6,7 +6,7 @@ def get_inventory():
 
 def add_prod(item, price, qty, category="Other"):
     data = database.load_data()
-    item = item.lower()
+    item.strip().lower()
     if "prod" not in data:
         data["prod"] = {}
     if item not in data["prod"]:
@@ -17,7 +17,7 @@ def add_prod(item, price, qty, category="Other"):
 
 def update_price(item, price):
     data = database.load_data()
-    item = item.lower()
+    item.strip().lower()
     if item in data.get("prod", {}):
         data["prod"][item][0] = price
         database.save_data(data)
@@ -26,7 +26,7 @@ def update_price(item, price):
 
 def update_qty(item, qty):
     data = database.load_data()
-    item = item.lower()
+    item.strip().lower()
     if item in data.get("prod", {}):
         data["prod"][item][1] = qty
         database.save_data(data)
@@ -35,7 +35,7 @@ def update_qty(item, qty):
 
 def delete_item(item):
     data = database.load_data()
-    item = item.lower()
+    item.strip().lower()
     if item in data.get("prod", {}):
         del data["prod"][item]
         # Also remove from cart if it exists
