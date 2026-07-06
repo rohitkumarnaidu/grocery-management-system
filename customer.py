@@ -13,7 +13,15 @@ def add_item(item, qty):
         return False, "Product does not exist in inventory"
         
     price = data["prod"][item][0]
-    
+    available_stock = data["prod"][item][1]
+
+    current_cart_qty = 0
+    if "cart" in data and item in data["cart"]:
+        current_cart_qty = data["cart"][item][1]
+  
+    if current_cart_qty + qty > available_stock:
+        return False, f"Cannot add quantity. Only {available_stock} items available in stock, and you have {current_cart_qty} in your cart."
+        
     if "cart" not in data:
         data["cart"] = {}
         
@@ -24,7 +32,6 @@ def add_item(item, qty):
         
     database.save_data(data)
     return True, "Added to cart"
-
 def delete_item(item):
     data = database.load_data()
     item = item.strip().lower()
