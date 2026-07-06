@@ -2,42 +2,43 @@ import database
 
 def get_inventory():
     data = database.load_data()
-    return data.get("prod", {})
+    # using 'products' in place of 'prod'
+    return data.get("products", {})
 
-def add_prod(item, price, qty, category="Other"):
+def add_product(item, price, quantity, category="Other"):
     data = database.load_data()
-    item.strip().lower()
-    if "prod" not in data:
-        data["prod"] = {}
-    if item not in data["prod"]:
-        data["prod"][item] = [price, qty, category]
+    item = item.lower()
+    if "products" not in data:
+        data["products"] = {}
+    if item not in data["products"]:
+        data["products"][item] = [price, quantity, category]
         database.save_data(data)
         return True, "Item added successfully!"
     return False, "Item already exists"
 
 def update_price(item, price):
     data = database.load_data()
-    item.strip().lower()
-    if item in data.get("prod", {}):
-        data["prod"][item][0] = price
+    item = item.lower()
+    if item in data.get("products", {}):
+        data["products"][item][0] = price
         database.save_data(data)
         return True, "Price updated successfully!"
     return False, "Product does not exist"
 
-def update_qty(item, qty):
+def update_quantity(item, quantity):
     data = database.load_data()
-    item.strip().lower()
-    if item in data.get("prod", {}):
-        data["prod"][item][1] = qty
+    item = item.lower()
+    if item in data.get("products", {}):
+        data["products"][item][1] = quantity
         database.save_data(data)
         return True, "Quantity updated successfully!"
     return False, "Product does not exist"
 
 def delete_item(item):
     data = database.load_data()
-    item.strip().lower()
-    if item in data.get("prod", {}):
-        del data["prod"][item]
+    item = item.lower()
+    if item in data.get("products", {}):
+        del data["products"][item]
         # Also remove from cart if it exists
         if "cart" in data and item in data["cart"]:
             del data["cart"][item]
