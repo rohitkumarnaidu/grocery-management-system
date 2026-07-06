@@ -36,10 +36,9 @@ def add_item(item, quantity):
         
     database.save_data(data)
     return True, "Added to cart"
-
 def delete_item(item):
     data = database.load_data()
-    item = item.lower()
+    item = item.strip().lower()
     if item in data.get("cart", {}):
         del data["cart"][item]
         database.save_data(data)
@@ -48,7 +47,7 @@ def delete_item(item):
 
 def update_item_qty(item, quantity):
     data = database.load_data()
-    item = item.lower()
+    item = item.strip().lower()
     if item in data.get("cart", {}):
         if quantity <= 0:
             del data["cart"][item]

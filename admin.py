@@ -8,10 +8,10 @@ def get_inventory():
 def add_product(item, price, quantity, category="Other"):
     data = database.load_data()
     item = item.lower()
-    if "products" not in data:
-        data["products"] = {}
-    if item not in data["products"]:
-        data["products"][item] = [price, quantity, category]
+    if "prod" not in data:
+        data["prod"] = {}
+    if item not in data["prod"]:
+        data["prod"][item] = [price, quantity, category]
         database.save_data(data)
         return True, "Item added successfully!"
     return False, "Item already exists"
@@ -19,8 +19,8 @@ def add_product(item, price, quantity, category="Other"):
 def update_price(item, price):
     data = database.load_data()
     item = item.lower()
-    if item in data.get("products", {}):
-        data["products"][item][0] = price
+    if item in data.get("prod", {}):
+        data["prod"][item][0] = price
         database.save_data(data)
         return True, "Price updated successfully!"
     return False, "Product does not exist"
@@ -28,8 +28,8 @@ def update_price(item, price):
 def update_quantity(item, quantity):
     data = database.load_data()
     item = item.lower()
-    if item in data.get("products", {}):
-        data["products"][item][1] = quantity
+    if item in data.get("prod", {}):
+        data["prod"][item][1] = quantity
         database.save_data(data)
         return True, "Quantity updated successfully!"
     return False, "Product does not exist"
@@ -37,8 +37,8 @@ def update_quantity(item, quantity):
 def delete_item(item):
     data = database.load_data()
     item = item.lower()
-    if item in data.get("products", {}):
-        del data["products"][item]
+    if item in data.get("prod", {}):
+        del data["prod"][item]
         # Also remove from cart if it exists
         if "cart" in data and item in data["cart"]:
             del data["cart"][item]

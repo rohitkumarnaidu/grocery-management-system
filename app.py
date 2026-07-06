@@ -31,6 +31,8 @@ def add_product():
     success, message = admin.add_product(data['item'], price, quantity, category)
     return jsonify({"success": success, "message": message})
 
+    success, msg = admin.add_prod(data['item'], price, qty, category)
+    return jsonify({"success": success, "message": msg})@app.route('/api/products/<item>/price', methods=['PUT'])
 @app.route('/api/products/<item>/price', methods=['PUT'])
 def update_price(item):
     data = request.json
@@ -55,7 +57,8 @@ def update_qty(item):
     success, message = admin.update_quantity(item, quantity)
     return jsonify({"success": success, "message": message})
 
-@app.route('/api/products/<item>', methods=['DELETE'])
+    success, msg = admin.update_qty(item, qty)
+    return jsonify({"success": success, "message": msg})@app.route('/api/products/<item>', methods=['DELETE'])
 def delete_product(item):
     success, message = admin.delete_item(item)
     return jsonify({"success": success, "message": message})
@@ -90,6 +93,8 @@ def update_cart_qty(item):
     success, message = customer.update_item_qty(item, quantity)
     return jsonify({"success": success, "message": message})
 
+    success, msg = customer.update_item_qty(item, qty)
+    return jsonify({"success": success, "message": msg})
 @app.route('/api/cart/<item>', methods=['DELETE'])
 def remove_from_cart(item):
     success, message = customer.delete_item(item)
