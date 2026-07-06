@@ -10,11 +10,12 @@ def add_item(item, quantity):
     data = database.load_data()
     item = item.lower()
     
-    if item not in data.get("prod", {}):
+    # using 'products' in place of 'prod'
+    if item not in data.get("products", {}):
         return False, "Product does not exist in inventory"
         
-    price = data["prod"][item][0]
-    available_stock = data["prod"][item][1]
+    price = data["products"][item][0]
+    available_stock = data["products"][item][1]
     
     # Track what is already sitting in the cart
     current_cart_qty = 0
@@ -70,7 +71,7 @@ def checkout():
     if not cart:
         return False, "Cart is empty"
         
-    prod = data.get("prod", {})
+    prod = data.get("products", {})
     total = 0
     items_list = []
     
@@ -86,7 +87,7 @@ def checkout():
         quantity = details[1]
         total += price * quantity
         prod[item][1] -= quantity
-        items_list.append({"item": item, "price": price, "qty": quantity}) # Kept 'qty' key for frontend compatibility
+        items_list.append({"item": item, "price": price, "qty": quantity})
         
     order_id = str(uuid.uuid4())[:8].upper()
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -101,8 +102,8 @@ def checkout():
     if "orders" not in data:
         data["orders"] = []
         
-    data["orders"].insert(0, order) # Add to top of list
-    data["cart"] = {} # Empty the cart
+    data["orders"].insert(0, order)
+    data["cart"] = {}
     
     database.save_data(data)
     return True, "Checkout successful"
