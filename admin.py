@@ -4,13 +4,13 @@ def get_inventory():
     data = database.load_data()
     return data.get("prod", {})
 
-def add_prod(item, price, qty, category="Other"):
+def add_product(item, price, quantity, category="Other"):
     data = database.load_data()
     item = item.lower()
     if "prod" not in data:
         data["prod"] = {}
     if item not in data["prod"]:
-        data["prod"][item] = [price, qty, category]
+        data["prod"][item] = [price, quantity, category]
         database.save_data(data)
         return True, "Item added successfully!"
     return False, "Item already exists"
@@ -24,11 +24,11 @@ def update_price(item, price):
         return True, "Price updated successfully!"
     return False, "Product does not exist"
 
-def update_qty(item, qty):
+def update_quantity(item, quantity):
     data = database.load_data()
     item = item.lower()
     if item in data.get("prod", {}):
-        data["prod"][item][1] = qty
+        data["prod"][item][1] = quantity
         database.save_data(data)
         return True, "Quantity updated successfully!"
     return False, "Product does not exist"

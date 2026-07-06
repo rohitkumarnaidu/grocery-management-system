@@ -6,7 +6,7 @@ def get_cart():
     data = database.load_data()
     return data.get("cart", {})
 
-def add_item(item, qty):
+def add_item(item, quantity):
     data = database.load_data()
     item = item.lower()
     
@@ -14,14 +14,24 @@ def add_item(item, qty):
         return False, "Product does not exist in inventory"
         
     price = data["prod"][item][0]
+    available_stock = data["prod"][item][1]
     
+    # Track what is already sitting in the cart
+    current_cart_qty = 0
+    if "cart" in data and item in data["cart"]:
+        current_cart_qty = data["cart"][item][1]
+        
+    # Stock Validation Guard
+    if current_cart_qty + quantity > available_stock:
+        return False, f"Cannot add quantity. Only {available_stock} items available in stock, and you have {current_cart_qty} in your cart."
+        
     if "cart" not in data:
         data["cart"] = {}
         
     if item in data["cart"]:
-        data["cart"][item][1] += qty
+        data["cart"][item][1] += quantity
     else:
-        data["cart"][item] = [price, qty]
+        data["cart"][item] = [price, quantity]
         
     database.save_data(data)
     return True, "Added to cart"
@@ -35,23 +45,23 @@ def delete_item(item):
         return True, "Deleted from cart"
     return False, "Product not in cart"
 
-def update_item_qty(item, qty):
+def update_item_qty(item, quantity):
     data = database.load_data()
     item = item.lower()
     if item in data.get("cart", {}):
-        if qty <= 0:
+        if quantity <= 0:
             del data["cart"][item]
         else:
-            data["cart"][item][1] = qty
+            data["cart"][item][1] = quantity
         database.save_data(data)
         return True, "Cart updated"
     return False, "Product not in cart"
 
-def view_tp():
+def view_total_price():
     data = database.load_data()
     cart = data.get("cart", {})
-    tp = sum(cart[item][0] * cart[item][1] for item in cart)
-    return tp
+    total_price = sum(cart[item][0] * cart[item][1] for item in cart)
+    return total_price
 
 def checkout():
     data = database.load_data()
@@ -66,17 +76,17 @@ def checkout():
     
     # Check inventory first
     for item, details in cart.items():
-        qty = details[1]
-        if item not in prod or prod[item][1] < qty:
+        quantity = details[1]
+        if item not in prod or prod[item][1] < quantity:
             return False, f"Not enough stock for {item}"
             
     # Process checkout
     for item, details in cart.items():
         price = details[0]
-        qty = details[1]
-        total += price * qty
-        prod[item][1] -= qty
-        items_list.append({"item": item, "price": price, "qty": qty})
+        quantity = details[1]
+        total += price * quantity
+        prod[item][1] -= quantity
+        items_list.append({"item": item, "price": price, "qty": quantity}) # Kept 'qty' key for frontend compatibility
         
     order_id = str(uuid.uuid4())[:8].upper()
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")

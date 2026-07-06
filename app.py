@@ -21,55 +21,84 @@ def get_products():
 def add_product():
     data = request.json
     category = data.get('category', 'Other')
-    success, msg = admin.add_prod(data['item'], data['price'], data['qty'], category)
-    return jsonify({"success": success, "message": msg})
+    try:
+        price = float(data['price'])
+        quantity = int(data['qty'])  # Kept 'qty' for incoming frontend key compatibility
+        if price < 0 or quantity < 0:
+            return jsonify({"success": False, "message": "Price and quantity cannot be negative"}), 400
+    except (ValueError, TypeError, KeyError):
+        return jsonify({"success": False, "message": "Invalid input: Price must be a number and Quantity must be an integer"}), 400
+    success, message = admin.add_product(data['item'], price, quantity, category)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>/price', methods=['PUT'])
 def update_price(item):
     data = request.json
-    success, msg = admin.update_price(item, data['price'])
-    return jsonify({"success": success, "message": msg})
+    try:
+        price = float(data['price'])
+        if price < 0:
+            return jsonify({"success": False, "message": "Price cannot be negative"}), 400
+    except (ValueError, TypeError, KeyError):
+        return jsonify({"success": False, "message": "Invalid input: Price must be a valid number"}), 400
+    success, message = admin.update_price(item, price)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>/qty', methods=['PUT'])
 def update_qty(item):
     data = request.json
-    success, msg = admin.update_qty(item, data['qty'])
-    return jsonify({"success": success, "message": msg})
+    try:
+        quantity = int(data['qty'])
+        if quantity < 0:
+            return jsonify({"success": False, "message": "Quantity cannot be negative"}), 400
+    except (ValueError, TypeError, KeyError):
+        return jsonify({"success": False, "message": "Invalid input: Quantity must be a valid integer"}), 400
+    success, message = admin.update_quantity(item, quantity)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>', methods=['DELETE'])
 def delete_product(item):
-    success, msg = admin.delete_item(item)
-    return jsonify({"success": success, "message": msg})
+    success, message = admin.delete_item(item)
+    return jsonify({"success": success, "message": message})
 
 # --- Customer API ---
 
 @app.route('/api/cart', methods=['GET'])
 def get_cart():
     cart = customer.get_cart()
-    total_price = customer.view_tp()
+    total_price = customer.view_total_price()  
     return jsonify({"cart": cart, "total_price": total_price})
 
 @app.route('/api/cart', methods=['POST'])
 def add_to_cart():
     data = request.json
-    success, msg = customer.add_item(data['item'], data['qty'])
-    return jsonify({"success": success, "message": msg})
+    try:
+        quantity = int(data['qty'])
+        if quantity <= 0:
+            return jsonify({"success": False, "message": "Quantity must be greater than zero"}), 400
+    except (ValueError, TypeError, KeyError):
+        return jsonify({"success": False, "message": "Invalid input: Quantity must be a valid integer"}), 400
+    success, message = customer.add_item(data['item'], quantity)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/cart/<item>', methods=['PUT'])
 def update_cart_qty(item):
     data = request.json
-    success, msg = customer.update_item_qty(item, data['qty'])
-    return jsonify({"success": success, "message": msg})
+    try:
+        quantity = int(data['qty'])
+    except (ValueError, TypeError, KeyError):
+        return jsonify({"success": False, "message": "Invalid input: Quantity must be a valid integer"}), 400
+    success, message = customer.update_item_qty(item, quantity)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/cart/<item>', methods=['DELETE'])
 def remove_from_cart(item):
-    success, msg = customer.delete_item(item)
-    return jsonify({"success": success, "message": msg})
+    success, message = customer.delete_item(item)
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
-    success, msg = customer.checkout()
-    return jsonify({"success": success, "message": msg})
+    success, message = customer.checkout()
+    return jsonify({"success": success, "message": message})
 
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
