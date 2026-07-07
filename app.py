@@ -60,6 +60,11 @@ def get_low_stock_alerts():
     alerts = admin.get_low_stock_alerts(threshold)
     return jsonify(alerts)
 
+@app.route('/api/admin/analytics', methods=['GET'])
+def get_sales_analytics():
+    analytics = admin.get_sales_analytics()
+    return jsonify(analytics)
+
 @app.route('/api/products/<item>/qty', methods=['PUT'])
 def update_qty(item):
     data = request.json
