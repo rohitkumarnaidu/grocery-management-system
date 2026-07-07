@@ -48,16 +48,29 @@ def delete_item(item):
     return False, "Product not in cart"
 
 def update_item_qty(item, quantity):
+    """
+    Updates the quantity of an item in the cart.
+    Safely handles checks to prevent KeyError crashes on non-existent items.
+    """
     data = database.load_data()
-    item = item.strip().lower()
-    if item in data.get("cart", {}):
-        if quantity <= 0:
-            del data["cart"][item]
-        else:
-            data["cart"][item][1] = quantity
+    cart = data.get("cart", {})
+    
+    # --- BUGFIX #4: Existence Check Guard ---
+    if item not in cart:
+        return False, "Item not in cart"
+        
+    # Handle removal safely if quantity drops to zero or below
+    if quantity <= 0:
+        del cart[item]
         database.save_data(data)
-        return True, "Cart updated"
-    return False, "Product not in cart"
+        return True, f"Removed '{item}' from cart."
+    if isinstance(cart[item], list) and len(cart[item]) > 1:
+        cart[item][1] = quantity
+    elif isinstance(cart[item], dict):
+        cart[item]["quantity"] = quantity
+        
+    database.save_data(data)
+    return True, f"Updated '{item}' quantity to {quantity}."
 
 def view_total_price():
     data = database.load_data()
