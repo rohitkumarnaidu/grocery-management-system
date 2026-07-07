@@ -81,3 +81,48 @@ def get_low_stock_alerts(threshold=5):
             }
             
     return alerts
+
+def get_sales_analytics():
+    data = database.load_data()
+    orders = data.get("orders", [])
+    products_db = data.get("products", {})
+    total_revenue = 0.0
+    total_orders = len(orders)
+    product_counts = {}   
+    category_revenue = {} 
+    for order in orders:
+        total_revenue += order.get("total", 0)
+        for item_entry in order.get("items", []):
+            name = item_entry.get("item", "").lower()
+            price = item_entry.get("price", 0)
+            qty = item_entry.get("qty", 0)
+            
+            # 1. Track product popularity volume
+            product_counts[name] = product_counts.get(name, 0) + qty
+            
+            # 2. Determine category associated with this item
+            category = "Other"
+            if name in products_db:
+                details = products_db[name]
+                if isinstance(details, dict):
+                    category = details.get("category", "Other")
+                elif isinstance(details, list) and len(details) > 2:
+                    category = details[2]
+            
+            # 3. Track revenue by each category
+            item_revenue = price * qty
+            category_revenue[category] = category_revenue.get(category, 0.0) + item_revenue
+
+    # Sort best sellers list by total quantity sold (highest to lowest)
+    best_sellers = sorted(
+        [{"item": k, "quantity_sold": v} for k, v in product_counts.items()],
+        key=lambda x: x["quantity_sold"],
+        reverse=True
+    )
+    
+    return {
+        "total_revenue": round(total_revenue, 2),
+        "total_orders": total_orders,
+        "best_selling_products": best_sellers,
+        "revenue_by_category": {k: round(v, 2) for k, v in category_revenue.items()}
+    }
