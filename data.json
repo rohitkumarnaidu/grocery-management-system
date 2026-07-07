@@ -1,75 +1,87 @@
 {
-  "products": {
-    "ass": [
-      111,
-      16,
-      "Other"
-    ],
-    "water": [
-      22,
-      121,
-      "Dairy"
-    ],
-    "milk": [
-      2.5,
-      5,
-      "Dairy"
+    "products": {
+        "ass": {
+            "price": 111,
+            "quantity": 16,
+            "category": "Other"
+        },
+        "water": {
+            "price": 22,
+            "quantity": 121,
+            "category": "Dairy"
+        },
+        "milk": {
+            "price": 2.5,
+            "quantity": 0,
+            "category": "Dairy"
+        },
+        "banana": {
+            "price": 1.2,
+            "quantity": 5,
+            "category": "Other"
+        }
+    },
+    "cart": {},
+    "orders": [
+        {
+            "id": "F7D7729A",
+            "timestamp": "2026-07-07 11:14:29",
+            "items": [
+                {
+                    "item": "milk",
+                    "price": 2.5,
+                    "qty": 5
+                }
+            ],
+            "total": 12.5
+        },
+        {
+            "id": "A4408CB5",
+            "timestamp": "2026-07-02 23:19:50",
+            "items": [
+                {
+                    "item": "water",
+                    "price": 22,
+                    "qty": 1
+                }
+            ],
+            "total": 22
+        },
+        {
+            "id": "ADFBCFE5",
+            "timestamp": "2026-07-02 23:13:58",
+            "items": [
+                {
+                    "item": "ass",
+                    "price": 111,
+                    "qty": 1
+                }
+            ],
+            "total": 111
+        },
+        {
+            "id": "4D13015E",
+            "timestamp": "2026-07-02 23:12:09",
+            "items": [
+                {
+                    "item": "ass",
+                    "price": 111,
+                    "qty": 2
+                }
+            ],
+            "total": 222
+        },
+        {
+            "id": "5D9A5077",
+            "timestamp": "2026-07-02 23:11:56",
+            "items": [
+                {
+                    "item": "ass",
+                    "price": 111,
+                    "qty": 3
+                }
+            ],
+            "total": 333
+        }
     ]
-  },
-  "cart": {
-    "milk": [
-      2.5,
-      3
-    ]
-  },
-  "orders": [
-    {
-      "id": "A4408CB5",
-      "timestamp": "2026-07-02 23:19:50",
-      "items": [
-        {
-          "item": "water",
-          "price": 22,
-          "qty": 1
-        }
-      ],
-      "total": 22
-    },
-    {
-      "id": "ADFBCFE5",
-      "timestamp": "2026-07-02 23:13:58",
-      "items": [
-        {
-          "item": "ass",
-          "price": 111,
-          "qty": 1
-        }
-      ],
-      "total": 111
-    },
-    {
-      "id": "4D13015E",
-      "timestamp": "2026-07-02 23:12:09",
-      "items": [
-        {
-          "item": "ass",
-          "price": 111,
-          "qty": 2
-        }
-      ],
-      "total": 222
-    },
-    {
-      "id": "5D9A5077",
-      "timestamp": "2026-07-02 23:11:56",
-      "items": [
-        {
-          "item": "ass",
-          "price": 111,
-          "qty": 3
-        }
-      ],
-      "total": 333
-    }
-  ]
 }
