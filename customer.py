@@ -36,6 +36,7 @@ def add_item(item, quantity):
         
     database.save_data(data)
     return True, "Added to cart"
+
 def delete_item(item):
     data = database.load_data()
     item = item.strip().lower()
@@ -74,6 +75,16 @@ def checkout():
     total = 0
     items_list = []
     
+    # CHECK IF ANY ITEM IN THE CART HAS GONE OUT OF STOCK BEFORE PROCESSING THE BILL
+    unavailable_items = []
+    for item, details in cart.items():
+        quantity = details[1]
+        if item not in prod or prod[item][1] < quantity:
+            unavailable_items.append(item)
+            
+    if unavailable_items:
+        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
+            
     # Check inventory first
     for item, details in cart.items():
         quantity = details[1]
