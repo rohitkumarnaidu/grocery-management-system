@@ -7,6 +7,16 @@ import database
 app = Flask(__name__)
 CORS(app)
 
+# SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
+@app.before_request
+def authenticate_admin():
+    # Only check requests targeting the admin product modification API routes
+    if request.path.startswith('/api/products') and request.method != 'GET':
+        admin_password = request.headers.get('X-Admin-Password')
+        # Simple password guard matching the original concept's requirement
+        if admin_password != 'admin123':
+            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
+
 @app.route('/')
 def index():
     return jsonify({"status": "API is running"})
