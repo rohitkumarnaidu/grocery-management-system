@@ -53,6 +53,13 @@ def update_price(item):
     success, message = admin.update_price(item, price)
     return jsonify({"success": success, "message": message})
 
+@app.route('/api/admin/alerts', methods=['GET'])
+def get_low_stock_alerts():
+    # Allows the frontend to optionally pass a custom threshold via query string parameter
+    threshold = request.args.get('threshold', default=5, type=int)
+    alerts = admin.get_low_stock_alerts(threshold)
+    return jsonify(alerts)
+
 @app.route('/api/products/<item>/qty', methods=['PUT'])
 def update_qty(item):
     data = request.json
