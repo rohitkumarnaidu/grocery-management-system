@@ -121,3 +121,49 @@ def checkout():
     
     database.save_data(data)
     return True, "Checkout successful"
+
+def search_and_filter_products(query_name=None, min_price=None, max_price=None, category=None):
+    from admin import database # Local import to fetch the database loader safely
+    data = database.load_data()
+    products = data.get("products", {})
+    
+    results = {}
+    
+    for item, details in products.items():
+        # 1. Standardize item structure for handling both legacy list & dictionary schemas
+        if isinstance(details, dict):
+            price = details.get("price", 0.0)
+            quantity = details[1] if len(details) > 1 else 0
+# Fallback to 'Other' if the category index is empty or missing
+            item_category = details[2] if (len(details) > 2 and details[2]) else "Other"
+        elif isinstance(details, list):
+            price = details[0] if len(details) > 0 else 0.0
+            quantity = details[1] if len(details) > 1 else 0
+            item_category = details[2] if len(details) > 2 else "Other"
+        else:
+            continue
+
+        # 2. Guard: Substring Name Match
+        if query_name and query_name.lower() not in item.lower():
+            continue
+            
+        # 3. Guard: Minimum Price Filter
+        if min_price is not None and price < min_price:
+            continue
+            
+        # 4. Guard: Maximum Price Filter
+        if max_price is not None and price > max_price:
+            continue
+            
+        # 5. Guard: Category Match (Case-insensitive)
+        if category and category.lower() != item_category.lower():
+            continue
+            
+        # If the product survives all filter criteria guards, add it to results
+        results[item] = {
+            "price": price,
+            "quantity": quantity,
+            "category": item_category
+        }
+        
+    return results
