@@ -14,8 +14,9 @@ def add_item(item, quantity):
     if item not in data.get("products", {}):
         return False, "Product does not exist in inventory"
         
-    price = data["products"][item][0]
-    available_stock = data["products"][item][1]
+    # UPDATED: Swapped out indices [0] and [1] for self-documenting dictionary keys
+    price = data["products"][item]["price"]
+    available_stock = data["products"][item]["quantity"]
     
     # Track what is already sitting in the cart
     current_cart_qty = 0
@@ -79,7 +80,8 @@ def checkout():
     unavailable_items = []
     for item, details in cart.items():
         quantity = details[1]
-        if item not in prod or prod[item][1] < quantity:
+        # UPDATED: Checked against dictionary key ["quantity"] instead of index [1]
+        if item not in prod or prod[item]["quantity"] < quantity:
             unavailable_items.append(item)
             
     if unavailable_items:
@@ -88,7 +90,8 @@ def checkout():
     # Check inventory first
     for item, details in cart.items():
         quantity = details[1]
-        if item not in prod or prod[item][1] < quantity:
+        # UPDATED: Checked against dictionary key ["quantity"] instead of index [1]
+        if item not in prod or prod[item]["quantity"] < quantity:
             return False, f"Not enough stock for {item}"
             
     # Process checkout
@@ -96,7 +99,8 @@ def checkout():
         price = details[0]
         quantity = details[1]
         total += price * quantity
-        prod[item][1] -= quantity
+        # UPDATED: Decremented dictionary key ["quantity"] instead of index [1]
+        prod[item]["quantity"] -= quantity
         items_list.append({"item": item, "price": price, "qty": quantity})
         
     order_id = str(uuid.uuid4())[:8].upper()
