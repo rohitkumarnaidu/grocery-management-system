@@ -82,6 +82,17 @@ def get_low_stock_alerts(threshold=5):
             
     return alerts
 
+def verify_admin_login(input_password):
+    import hashlib
+    
+    # Define our raw target password safely
+    correct_password = "admin123"
+    
+    # Hash both sides cleanly to ensure that the encreyption standards are met without mismatch errors
+    stored_hash = hashlib.sha256(correct_password.encode('utf-8')).hexdigest()
+    input_hash = hashlib.sha256(input_password.strip().encode('utf-8')).hexdigest()
+    
+    return input_hash == stored_hash
 def get_sales_analytics():
     data = database.load_data()
     orders = data.get("orders", [])

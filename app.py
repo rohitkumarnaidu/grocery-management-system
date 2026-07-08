@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from sympy import false
 import admin
 import customer
 import database
@@ -26,6 +27,30 @@ def index():
 @app.route('/api/products', methods=['GET'])
 def get_products():
     return jsonify(admin.get_inventory())
+
+# Track failed login attempts globally
+failed_attempts = 0
+
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    global failed_attempts
+    
+    # lock out if attempts are exceeded
+    if failed_attempts >= 3:
+        return jsonify({"success": False, "message": "Access Denied. Account locked due to too many failed attempts."}), 403
+        
+    data = request.get_json() or {}
+    password = data.get("password", "")
+    
+    if admin.verify_admin_login(password):
+        failed_attempts = 0 # Reset on success
+        return jsonify({"success": True, "message": "Access Granted. Welcome Admin."})
+    else:
+        failed_attempts += 1
+        remaining = 3 - failed_attempts
+        if failed_attempts >= 3:
+            return jsonify({"success": False, "message": "Access Denied. Account locked."}), 403
+        return jsonify({"success": False, "message": f"Invalid password. {remaining} attempts remaining."}), 401
 
 @app.route('/api/products', methods=['POST'])
 def add_product():
@@ -63,6 +88,7 @@ def get_low_stock_alerts():
 def get_sales_analytics():
     analytics = admin.get_sales_analytics()
     return jsonify(analytics)
+
 
 @app.route('/api/products/<item>/qty', methods=['PUT'])
 def update_qty(item):
