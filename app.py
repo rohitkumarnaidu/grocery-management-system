@@ -18,8 +18,7 @@ def authenticate_admin():
 
         # Fallback to the original plaintext check to keep Issue #11 isolated and functional
         if admin_password != 'admin123':
-            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
-        
+            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401     
 @app.route('/')
 def index():
     return jsonify({"status": "API is running"})
