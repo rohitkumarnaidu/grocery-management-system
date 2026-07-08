@@ -88,7 +88,7 @@ def verify_admin_login(input_password):
     # Define our raw target password safely
     correct_password = "admin123"
     
-    # Hash both sides cleanly to ensure encryption standards are met without mismatch errors
+    # Hash both sides cleanly to ensure that the encreyption standards are met without mismatch errors
     stored_hash = hashlib.sha256(correct_password.encode('utf-8')).hexdigest()
     input_hash = hashlib.sha256(input_password.strip().encode('utf-8')).hexdigest()
     
