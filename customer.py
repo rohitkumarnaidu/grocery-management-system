@@ -144,9 +144,13 @@ def search_and_filter_products(query_name=None, min_price=None, max_price=None, 
     
     for item, details in products.items():
         # 1. Standardize item structure for handling both legacy list & dictionary schemas
+        # Fix: Extract dictionary items using explicit keys instead of index numbers
+        # Fix: Extract dictionary items using explicit keys instead of index numbers
         if isinstance(details, dict):
             price = details.get("price", 0.0)
-            quantity = details[1] if len(details) > 1 else 0
+            quantity = details.get("quantity", 0)
+            item_category = details.get("category", "Other")
+            
 # Fallback to 'Other' if the category index is empty or missing
             item_category = details[2] if (len(details) > 2 and details[2]) else "Other"
         elif isinstance(details, list):
