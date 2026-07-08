@@ -55,7 +55,6 @@ def update_price(item):
 
 @app.route('/api/admin/alerts', methods=['GET'])
 def get_low_stock_alerts():
-    # Allows the frontend to optionally pass a custom threshold via query string parameter
     threshold = request.args.get('threshold', default=5, type=int)
     alerts = admin.get_low_stock_alerts(threshold)
     return jsonify(alerts)
@@ -128,5 +127,21 @@ def get_orders():
     orders = data.get("orders", [])
     return jsonify(orders)
 
+# --- Search & Filter API ---
+@app.route('/api/products/filter', methods=['GET'])
+def search_products():
+    
+    query_name = request.args.get('name', default=None, type=str)
+    category = request.args.get('category', default=None, type=str)
+    min_price = request.args.get('min_price', default=None, type=float)
+    max_price = request.args.get('max_price', default=None, type=float)
+    
+    results = customer.search_and_filter_products(
+        query_name=query_name, 
+        min_price=min_price, 
+        max_price=max_price, 
+        category=category
+    )
+    return jsonify(results)
 if __name__ == '__main__':
     app.run(debug=True)
