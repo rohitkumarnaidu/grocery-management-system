@@ -1,10 +1,6 @@
 import database
 
-def get_inventory():
-    data = database.load_data()
-    # using 'products' in place of 'prod'
-    return data.get("products", {})
-
+ 
 def add_product(item, price, quantity, category="Other"):
     data = database.load_data()
     item = item.lower()
@@ -20,7 +16,13 @@ def update_price(item, price):
     data = database.load_data()
     item = item.lower()
     if item in data.get("products", {}):
-        data["products"][item][0] = price
+        details = data["products"][item]
+        # Check layout style to modify the value correctly
+        if isinstance(details, list) and len(details) > 0:
+            data["products"][item][0] = price
+        elif isinstance(details, dict):
+            data["products"][item]["price"] = price
+            
         database.save_data(data)
         return True, "Price updated successfully!"
     return False, "Product does not exist"
@@ -29,7 +31,13 @@ def update_quantity(item, quantity):
     data = database.load_data()
     item = item.lower()
     if item in data.get("products", {}):
-        data["products"][item][1] = quantity
+        details = data["products"][item]
+        # Check layout style to modify the value correctly
+        if isinstance(details, list) and len(details) > 1:
+            data["products"][item][1] = quantity
+        elif isinstance(details, dict):
+            data["products"][item]["quantity"] = quantity
+            
         database.save_data(data)
         return True, "Quantity updated successfully!"
     return False, "Product does not exist"

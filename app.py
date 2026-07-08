@@ -10,13 +10,16 @@ CORS(app)
 # SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
 @app.before_request
 def authenticate_admin():
-    # Only check requests targeting the admin product modification API routes
     if request.path.startswith('/api/products') and request.method != 'GET':
         admin_password = request.headers.get('X-Admin-Password')
-        # Simple password guard matching the original concept's requirement
+        
+        # if admin_password != 'admin123':
+        #     return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
+
+        # Fallback to the original plaintext check to keep Issue #11 isolated and functional
         if admin_password != 'admin123':
             return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
-
+        
 @app.route('/')
 def index():
     return jsonify({"status": "API is running"})
@@ -25,7 +28,9 @@ def index():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
-    return jsonify(admin.get_inventory())
+    # Fetch data safely from the central database schema
+    data = database.load_data()
+    return jsonify(data.get("products", {}))
 
 @app.route('/api/products', methods=['POST'])
 def add_product():
