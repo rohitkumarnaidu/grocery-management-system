@@ -5,6 +5,9 @@ import uuid
 def get_cart():
     data = database.load_data()
     return data.get("cart", {})
+    
+    database.save_data(data)
+    return data.get("cart", {})
 
 def add_item(item, quantity):
     data = database.load_data()
@@ -75,7 +78,13 @@ def update_item_qty(item, quantity):
 def view_total_price():
     data = database.load_data()
     cart = data.get("cart", {})
-    total_price = sum(cart[item][0] * cart[item][1] for item in cart)
+    # Safely handles both list and dictionary schemas to prevent TypeErrors
+    total_price = 0
+    for item in cart:
+        if isinstance(cart[item], list):
+            total_price += cart[item][0] * cart[item][1]
+        elif isinstance(cart[item], dict):
+            total_price += cart[item].get("price", 0) * cart[item].get("quantity", 0)
     return total_price
 
 def checkout():
@@ -89,30 +98,22 @@ def checkout():
     total = 0
     items_list = []
     
-    # CHECK IF ANY ITEM IN THE CART HAS GONE OUT OF STOCK BEFORE PROCESSING THE BILL
     unavailable_items = []
     for item, details in cart.items():
-        quantity = details[1]
-        # UPDATED: Checked against dictionary key ["quantity"] instead of index [1]
+        # Safely extracts quantity regardless of layout style
+        quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
         if item not in prod or prod[item]["quantity"] < quantity:
             unavailable_items.append(item)
             
     if unavailable_items:
         return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
             
-    # Check inventory first
     for item, details in cart.items():
-        quantity = details[1]
-        # UPDATED: Checked against dictionary key ["quantity"] instead of index [1]
-        if item not in prod or prod[item]["quantity"] < quantity:
-            return False, f"Not enough stock for {item}"
-            
-    # Process checkout
-    for item, details in cart.items():
-        price = details[0]
-        quantity = details[1]
+        # Safely extracts price and quantity regardless of layout style
+        price = details[0] if isinstance(details, list) else details.get("price", 0.0)
+        quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
+        
         total += price * quantity
-        # UPDATED: Decremented dictionary key ["quantity"] instead of index [1]
         prod[item]["quantity"] -= quantity
         items_list.append({"item": item, "price": price, "qty": quantity})
         
@@ -134,7 +135,6 @@ def checkout():
     
     database.save_data(data)
     return True, "Checkout successful"
-
 def search_and_filter_products(query_name=None, min_price=None, max_price=None, category=None):
     from admin import database # Local import to fetch the database loader safely
     data = database.load_data()
@@ -149,10 +149,13 @@ def search_and_filter_products(query_name=None, min_price=None, max_price=None, 
         if isinstance(details, dict):
             price = details.get("price", 0.0)
             quantity = details.get("quantity", 0)
+<<<<<<< HEAD
+=======
             item_category = details.get("category", "Other")
             
+>>>>>>> upstream/main
 # Fallback to 'Other' if the category index is empty or missing
-            item_category = details[2] if (len(details) > 2 and details[2]) else "Other"
+            item_category = details.get("category", "Other")
         elif isinstance(details, list):
             price = details[0] if len(details) > 0 else 0.0
             quantity = details[1] if len(details) > 1 else 0

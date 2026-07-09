@@ -8,7 +8,12 @@ def load_data():
         return {"prod": {}, "cart": {}, "orders": []}
     try:
         with open(DATA_FILE, "r") as f:
-            return json.load(f)
+            content = json.load(f)
+            # Ensure all required keys exist in the loaded data
+            if "prod" not in content: content["prod"] = {}
+            if "cart" not in content: content["cart"] = {}
+            if "orders" not in content: content["orders"] = []
+            return content
     except:
         return {"prod": {}, "cart": {}, "orders": []}
 
