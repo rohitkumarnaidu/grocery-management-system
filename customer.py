@@ -134,7 +134,12 @@ def checkout():
     data["cart"] = {}
     
     database.save_data(data)
-    return True, "Checkout successful"
+    
+    # --- ADD THIS LINE TO GENERATE THE BILL ---
+    receipt_path = generate_receipt_file(order)
+    
+    return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}"
+
 def search_and_filter_products(query_name=None, min_price=None, max_price=None, category=None):
     from admin import database 
     data = database.load_data()
@@ -155,3 +160,44 @@ def search_and_filter_products(query_name=None, min_price=None, max_price=None, 
             continue
         if query_name and query_name.lower() not in item.lower():
             continue
+
+import os
+
+def generate_receipt_file(order):
+    """
+    Generates a clean, well-formatted text receipt file for the customer's invoice.
+    Saves it in a 'receipts' folder with a unique filename.
+    """
+    # Ensure a receipts directory exists
+    os.makedirs("receipts", exist_ok=True)
+    
+    filename = f"receipts/receipt_{order['id']}.txt"
+    
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("=========================================\n")
+        f.write("          GROCERY MANAGEMENT SYSTEM      \n")
+        f.write("=========================================\n")
+        f.write(f"Order ID   : {order['id']}\n")
+        f.write(f"Timestamp  : {order['timestamp']}\n")
+        f.write("-----------------------------------------\n")
+        f.write(f"{'Item':<18} {'Qty':<5} {'Price':<8} {'Total':<8}\n")
+        f.write("-----------------------------------------\n")
+        
+        for item in order["items"]:
+            name = item["item"].capitalize()
+            qty = item["qty"]
+            price = item["price"]
+            item_total = price * qty
+            f.write(f"{name:<18} {qty:<5} Rs.{price:<5.2f} Rs.{item_total:<6.2f}\n")
+            
+        f.write("-----------------------------------------\n")
+        if "subtotal" in order:
+            f.write(f"{'Subtotal':<31} Rs.{order['subtotal']:.2f}\n")
+        if order.get("coupon_applied"):
+            f.write(f"Coupon Applied ({order['coupon_applied']}): -Rs.{order['discount_applied']:.2f}\n")
+        f.write(f"{'Grand Total':<31} Rs.{order['total']:.2f}\n")
+        f.write("=========================================\n")
+        f.write("        Thank you for shopping with us!   \n")
+        f.write("=========================================\n")
+        
+    return filename
