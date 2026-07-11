@@ -145,3 +145,33 @@ def get_sales_analytics():
         "best_selling_products": best_sellers,
         "revenue_by_category": {k: round(v, 2) for k, v in category_revenue.items()}
     }
+def add_coupon(code, discount_type, value, min_purchase=0.0):
+    """
+    Creates a coupon code.
+    discount_type: 'percentage' (e.g., 10 for 10% off) or 'flat' (e.g., 50 for Rs.50 off)
+    """
+    data = database.load_data()
+    if "coupons" not in data:
+        data["coupons"] = {}
+        
+    code_upper = code.strip().upper()
+    data["coupons"][code_upper] = {
+        "type": discount_type.lower(),
+        "value": float(value),
+        "min_purchase": float(min_purchase)
+    }
+    database.save_data(data)
+    return True, f"Coupon '{code_upper}' added successfully!"
+
+def delete_coupon(code):
+    data = database.load_data()
+    code_upper = code.strip().upper()
+    if "coupons" in data and code_upper in data["coupons"]:
+        del data["coupons"][code_upper]
+        database.save_data(data)
+        return True, f"Coupon '{code_upper}' deleted successfully!"
+    return False, "Coupon code does not exist"
+
+def get_active_coupons():
+    data = database.load_data()
+    return data.get("coupons", {})
