@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -131,7 +132,7 @@ export default function App() {
   const cartItemCount = Object.values(cart).reduce((sum, [, qty]) => sum + qty, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 text-slate-800 flex flex-col items-center overflow-x-hidden font-sans selection:bg-violet-200 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-violet-950/30 text-slate-800 dark:text-slate-100 flex flex-col items-center overflow-x-hidden font-sans selection:bg-violet-200 relative">
       
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
@@ -151,25 +152,28 @@ export default function App() {
       <div className="w-full max-w-7xl p-4 sm:p-6 lg:p-8 relative z-10">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center py-5 px-8 mb-8 bg-white/70 border border-slate-200/60 backdrop-blur-xl rounded-2xl shadow-sm gap-5">
+        <header className="flex flex-col md:flex-row justify-between items-center py-5 px-8 mb-8 bg-white/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-xl rounded-2xl shadow-sm gap-5">
           <div className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-violet-500/20">
               <Leaf className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
             Stock Smart
           </div>
-          <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
-            <button 
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => setView('customer')}>
-              🛒 Shop
-            </button>
-            <button 
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => setView('admin')}>
-              📊 Dashboard
-            </button>
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200/50 dark:border-slate-700/50">
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
+                onClick={() => setView('customer')}>
+                🛒 Shop
+              </button>
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
+                onClick={() => setView('admin')}>
+                📊 Dashboard
+              </button>
+            </nav>
+            <ThemeToggle />
+          </div>
         </header>
 
         {view === 'customer' && (
@@ -177,14 +181,14 @@ export default function App() {
             {/* Category Filter Pills */}
             <div className="mb-8 flex flex-wrap gap-2.5 justify-center max-w-5xl mx-auto">
               <button 
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === 'All' ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === 'All' ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
                 onClick={() => setSelectedCategory('All')}>
                 ✨ All
               </button>
               {CATEGORIES.map(cat => (
                 <button 
                   key={cat} 
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === cat ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === cat ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
                   onClick={() => setSelectedCategory(cat)}>
                   {CATEGORY_EMOJI[cat]} {cat}
                 </button>
@@ -193,13 +197,13 @@ export default function App() {
 
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Product Grid Panel */}
-              <div className="lg:col-span-2 bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+              <div className="lg:col-span-2 bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-violet-100 rounded-xl">
-                      <Store className="w-5 h-5 text-violet-600" />
+                    <div className="p-2.5 bg-violet-100 dark:bg-violet-900/50 rounded-xl">
+                      <Store className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">Fresh Products</h2>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Fresh Products</h2>
                   </div>
                   <span className="text-sm text-slate-400 font-medium">
                     {Object.keys(inventory).filter(item => {
@@ -212,7 +216,7 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {Object.keys(inventory).length === 0 ? (
                      <div className="col-span-full text-center text-slate-400 py-16 flex flex-col items-center gap-4">
-                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                       <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
                          <Sparkles className="w-7 h-7 text-slate-300" />
                        </div>
                        <p className="font-medium">No products available yet</p>
@@ -225,20 +229,20 @@ export default function App() {
                     }).map(item => {
                       const [price, qty, category = 'Other'] = inventory[item];
                       return (
-                        <div key={item} className="group relative border border-slate-200/60 rounded-2xl p-5 bg-white hover:border-violet-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 transition-all duration-400">
+                        <div key={item} className="group relative border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-5 bg-white dark:bg-slate-800/80 hover:border-violet-300 dark:hover:border-violet-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 transition-all duration-400">
                           
                           <div className="text-3xl mb-4 flex justify-center">
                             {CATEGORY_EMOJI[category] || '📦'}
                           </div>
-                          <div className="font-bold text-slate-800 capitalize text-base mb-0.5 text-center">{item}</div>
-                          <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-500 mb-4 text-center">{category}</div>
+                          <div className="font-bold text-slate-800 dark:text-slate-100 capitalize text-base mb-0.5 text-center">{item}</div>
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-500 dark:text-violet-400 mb-4 text-center">{category}</div>
                           
                           <div className="flex items-end justify-center gap-0.5 mb-4">
                             <span className="text-sm text-slate-400 mb-0.5 font-medium">$</span>
-                            <span className="text-2xl font-extrabold text-slate-800">{price}</span>
+                            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{price}</span>
                           </div>
                           
-                          <div className="flex justify-between items-center text-xs text-slate-500 mb-5 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-100">
+                          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-5 bg-slate-50 dark:bg-slate-700/50 px-3.5 py-2 rounded-xl border border-slate-100 dark:border-slate-600/50">
                             <span className="font-medium">In Stock</span>
                             <span className={qty > 0 ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{qty > 0 ? `${qty} units` : 'Sold Out'}</span>
                           </div>
@@ -255,13 +259,13 @@ export default function App() {
               
               {/* Cart Panel */}
               <div>
-                <div className="sticky top-6 bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-7 shadow-sm">
+                <div className="sticky top-6 bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-7 shadow-sm">
                   <div className="flex items-center justify-between mb-7">
                     <div className="flex items-center gap-3">
                       <div className="p-2.5 bg-amber-100 rounded-xl">
                         <ShoppingCart className="w-5 h-5 text-amber-600" />
                       </div>
-                      <h2 className="text-xl font-bold text-slate-800 tracking-tight">Cart</h2>
+                      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Cart</h2>
                     </div>
                     {cartItemCount > 0 && (
                       <span className="bg-violet-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">{cartItemCount}</span>
@@ -278,9 +282,9 @@ export default function App() {
                       Object.keys(cart).map(item => {
                         const [price, qty] = cart[item];
                         return (
-                          <div key={item} className="flex justify-between items-center p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors group">
+                          <div key={item} className="flex justify-between items-center p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 transition-colors group">
                             <div>
-                              <div className="font-semibold text-slate-700 capitalize text-sm">{item}</div>
+                              <div className="font-semibold text-slate-700 dark:text-slate-200 capitalize text-sm">{item}</div>
                               <div className="text-xs font-medium text-slate-400 mt-0.5">${price} <span className="text-slate-300 mx-0.5">×</span> {qty} = <span className="text-violet-600 font-semibold">${(price * qty).toFixed(2)}</span></div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -301,7 +305,7 @@ export default function App() {
                     )}
                   </div>
                   
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-100 flex justify-between items-center text-sm font-semibold text-slate-700 mb-5">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 border border-violet-100 dark:border-violet-800/50 flex justify-between items-center text-sm font-semibold text-slate-700 dark:text-slate-200 mb-5">
                     <span>Total</span>
                     <span className="text-xl font-extrabold text-violet-700">${totalPrice.toFixed(2)}</span>
                   </div>
@@ -315,17 +319,17 @@ export default function App() {
 
             {/* Customer Order History */}
             {orders.length > 0 && (
-              <div className="mt-8 bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+              <div className="mt-8 bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-7">
                   <div className="p-2.5 bg-emerald-100 rounded-xl">
                     <Clock className="w-5 h-5 text-emerald-600" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Recent Orders</h2>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Recent Orders</h2>
                 </div>
                 
                 <div className="space-y-3">
                   {orders.map((order, i) => (
-                    <div key={i} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-200 transition-colors">
+                    <div key={i} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-200 dark:hover:border-slate-600 transition-colors">
                       <div>
                         <div className="font-bold text-slate-700 mb-0.5 flex items-center gap-2">
                           <span className="text-violet-600">#{order.id}</span>
@@ -352,12 +356,12 @@ export default function App() {
           <div className="max-w-5xl mx-auto space-y-8">
             
             {/* Add Product Panel */}
-            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-7">
-                <div className="p-2.5 bg-violet-100 rounded-xl">
-                  <Plus className="w-5 h-5 text-violet-600" />
+                <div className="p-2.5 bg-violet-100 dark:bg-violet-900/50 rounded-xl">
+                  <Plus className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Add New Product</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Add New Product</h2>
               </div>
               
               <form onSubmit={addProduct} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
@@ -372,13 +376,13 @@ export default function App() {
             </div>
 
             {/* Inventory Panel */}
-            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-7">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-100 rounded-xl">
-                    <Package className="w-5 h-5 text-blue-600" />
+                  <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl">
+                    <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Inventory</h2>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Inventory</h2>
                 </div>
                 
                 <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
@@ -390,7 +394,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-100 hover:bg-transparent bg-slate-50">
@@ -457,15 +461,15 @@ export default function App() {
             </div>
 
             {/* Admin Order History Panel */}
-            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-7">
-                <div className="p-2.5 bg-emerald-100 rounded-xl">
-                  <Receipt className="w-5 h-5 text-emerald-600" />
+                <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
+                  <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Order Ledger</h2>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-100 hover:bg-transparent bg-slate-50">
