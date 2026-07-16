@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import NotFound from '@/pages/NotFound';
+import SearchBar from '@/components/SearchBar';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -35,6 +36,7 @@ export default function App() {
   const [cart, setCart] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
   const [orders, setOrders] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [newItem, setNewItem] = useState('');
   const [newPrice, setNewPrice] = useState('');
@@ -224,9 +226,15 @@ export default function App() {
                   <span className="text-sm text-slate-400 font-medium">
                     {Object.keys(inventory).filter(item => {
                       const [, , category = 'Other'] = inventory[item];
-                      return selectedCategory === 'All' || category === selectedCategory;
+                      const matchesCategory = selectedCategory === 'All' || category === selectedCategory;
+                      const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
                     }).length} items
                   </span>
+                </div>
+
+                <div className="mb-6">
+                  <SearchBar value={searchQuery} onSearch={setSearchQuery} />
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -238,10 +246,25 @@ export default function App() {
                        <p className="font-medium">No products available yet</p>
                        <p className="text-sm text-slate-400">Check back soon!</p>
                      </div>
+                  ) : Object.keys(inventory).filter(item => {
+                      const [, , category = 'Other'] = inventory[item];
+                      const matchesCategory = selectedCategory === 'All' || category === selectedCategory;
+                      const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    }).length === 0 ? (
+                     <div className="col-span-full text-center text-slate-400 py-16 flex flex-col items-center gap-4">
+                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                         <Search className="w-7 h-7 text-slate-300" />
+                       </div>
+                       <p className="font-medium text-slate-700 dark:text-slate-350">No products found</p>
+                       <p className="text-sm text-slate-400">Try adjusting your search query or category filter</p>
+                     </div>
                   ) : (
                     Object.keys(inventory).filter(item => {
                       const [, , category = 'Other'] = inventory[item];
-                      return selectedCategory === 'All' || category === selectedCategory;
+                      const matchesCategory = selectedCategory === 'All' || category === selectedCategory;
+                      const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
                     }).map(item => {
                       const [price, qty, category = 'Other'] = inventory[item];
                       return (
@@ -393,7 +416,7 @@ export default function App() {
 
             {/* Inventory Panel */}
             <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-7">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-7">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-blue-100 rounded-xl">
                     <Package className="w-5 h-5 text-blue-600" />
@@ -401,12 +424,15 @@ export default function App() {
                   <h2 className="text-xl font-bold text-slate-800 tracking-tight">Inventory</h2>
                 </div>
                 
-                <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                  <Search className="w-4 h-4 text-slate-400 ml-2" />
-                  <select className="bg-transparent border-0 text-slate-600 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-0 cursor-pointer" value={adminCategoryFilter} onChange={e => setAdminCategoryFilter(e.target.value)}>
-                    <option value="All">All Categories</option>
-                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                  <SearchBar value={searchQuery} onSearch={setSearchQuery} placeholder="Search inventory..." />
+                  <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                    <Search className="w-4 h-4 text-slate-400 ml-2" />
+                    <select className="bg-transparent border-0 text-slate-600 rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-0 cursor-pointer" value={adminCategoryFilter} onChange={e => setAdminCategoryFilter(e.target.value)}>
+                      <option value="All">All Categories</option>
+                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -424,7 +450,9 @@ export default function App() {
                   <TableBody>
                     {Object.keys(inventory).filter(item => {
                       const [, , category = 'Other'] = inventory[item];
-                      return adminCategoryFilter === 'All' || category === adminCategoryFilter;
+                      const matchesCategory = adminCategoryFilter === 'All' || category === adminCategoryFilter;
+                      const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
                     }).length === 0 ? (
                       <TableRow className="border-0">
                         <TableCell colSpan={5} className="text-center py-16 text-slate-400">
@@ -439,7 +467,9 @@ export default function App() {
                     ) : (
                       Object.keys(inventory).filter(item => {
                         const [, , category = 'Other'] = inventory[item];
-                        return adminCategoryFilter === 'All' || category === adminCategoryFilter;
+                        const matchesCategory = adminCategoryFilter === 'All' || category === adminCategoryFilter;
+                        const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
                       }).map(item => {
                         const [price, qty, category = 'Other'] = inventory[item];
                         return (
