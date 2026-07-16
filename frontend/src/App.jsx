@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import NotFound from '@/pages/NotFound';
+import NotificationBell from '@/components/NotificationBell';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -178,18 +179,21 @@ export default function App() {
             </div>
             Stock Smart
           </div>
-          <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
-            <button 
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => { window.location.hash = '#/shop'; }}>
-              🛒 Shop
-            </button>
-            <button 
-              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => { window.location.hash = '#/admin'; }}>
-              📊 Dashboard
-            </button>
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
+                onClick={() => { window.location.hash = '#/shop'; }}>
+                🛒 Shop
+              </button>
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
+                onClick={() => { window.location.hash = '#/admin'; }}>
+                📊 Dashboard
+              </button>
+            </nav>
+            {view === 'admin' && <NotificationBell />}
+          </div>
         </header>
 
         {view === 'customer' && (

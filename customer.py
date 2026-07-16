@@ -92,7 +92,7 @@ def checkout():
     cart = data.get("cart", {})
     
     if not cart:
-        return False, "Cart is empty"
+        return False, "Cart is empty", []
         
     prod = data.get("products", {})
     total = 0
@@ -106,8 +106,9 @@ def checkout():
             unavailable_items.append(item)
             
     if unavailable_items:
-        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
+        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart.", []
             
+    checked_out_items = []
     for item, details in cart.items():
         # Safely extracts price and quantity regardless of layout style
         price = details[0] if isinstance(details, list) else details.get("price", 0.0)
@@ -116,6 +117,7 @@ def checkout():
         total += price * quantity
         prod[item]["quantity"] -= quantity
         items_list.append({"item": item, "price": price, "qty": quantity})
+        checked_out_items.append({"product_name": item, "remaining_qty": prod[item]["quantity"]})
         
     order_id = str(uuid.uuid4())[:8].upper()
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -138,7 +140,7 @@ def checkout():
     # --- ADD THIS LINE TO GENERATE THE BILL ---
     receipt_path = generate_receipt_file(order)
     
-    return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}"
+    return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}", checked_out_items
 
 def search_and_filter_products(query_name=None, min_price=None, max_price=None, category=None):
     from admin import database 
