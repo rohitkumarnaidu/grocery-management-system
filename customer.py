@@ -10,6 +10,8 @@ def get_cart():
     return data.get("cart", {})
 
 def add_item(item, quantity):
+    if quantity <= 0:
+        return False, "Quantity must be greater than zero"
     data = database.load_data()
     item = item.lower()
     
