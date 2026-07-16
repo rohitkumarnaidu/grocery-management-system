@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
+import NotFound from '@/pages/NotFound';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -20,8 +21,16 @@ const CATEGORY_EMOJI = {
   'Frozen Foods': '🧊', 'Household': '🏠', 'Other': '📦'
 };
 
+// Resolves the current view from the URL hash
+const getViewFromHash = () => {
+  const hash = window.location.hash;
+  if (hash === '#/admin') return 'admin';
+  if (!hash || hash === '#/' || hash === '#/shop') return 'customer';
+  return 'notfound';
+};
+
 export default function App() {
-  const [view, setView] = useState('customer');
+  const [view, setView] = useState(getViewFromHash);
   const [inventory, setInventory] = useState({});
   const [cart, setCart] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
@@ -57,6 +66,14 @@ export default function App() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Sync view with hash changes (back/forward navigation + direct URL edits)
+  useEffect(() => {
+    if (!window.location.hash) window.location.hash = '#/shop';
+    const onHashChange = () => setView(getViewFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const addToCart = async (item) => {
@@ -130,6 +147,9 @@ export default function App() {
 
   const cartItemCount = Object.values(cart).reduce((sum, [, qty]) => sum + qty, 0);
 
+  // Render 404 page for any unrecognised hash route
+  if (view === 'notfound') return <NotFound />;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 text-slate-800 flex flex-col items-center overflow-x-hidden font-sans selection:bg-violet-200 relative">
       
@@ -161,12 +181,12 @@ export default function App() {
           <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
             <button 
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => setView('customer')}>
+              onClick={() => { window.location.hash = '#/shop'; }}>
               🛒 Shop
             </button>
             <button 
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-              onClick={() => setView('admin')}>
+              onClick={() => { window.location.hash = '#/admin'; }}>
               📊 Dashboard
             </button>
           </nav>
