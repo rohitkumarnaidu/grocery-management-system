@@ -78,13 +78,17 @@ def update_item_qty(item, quantity):
 def view_total_price():
     data = database.load_data()
     cart = data.get("cart", {})
-    # Safely handles both list and dictionary schemas to prevent TypeErrors
+    products = data.get("products", {})
     total_price = 0
     for item in cart:
-        if isinstance(cart[item], list):
-            total_price += cart[item][0] * cart[item][1]
-        elif isinstance(cart[item], dict):
-            total_price += cart[item].get("price", 0) * cart[item].get("quantity", 0)
+        qty = cart[item][1] if isinstance(cart[item], list) else cart[item].get("quantity", 0)
+        price = 0.0
+        if item in products:
+            prod_details = products[item]
+            price = prod_details.get("price", 0.0) if isinstance(prod_details, dict) else (prod_details[0] if len(prod_details) > 0 else 0.0)
+        else:
+            price = cart[item][0] if isinstance(cart[item], list) else cart[item].get("price", 0.0)
+        total_price += price * qty
     return total_price
 
 def checkout():
@@ -109,9 +113,16 @@ def checkout():
         return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
             
     for item, details in cart.items():
-        # Safely extracts price and quantity regardless of layout style
-        price = details[0] if isinstance(details, list) else details.get("price", 0.0)
+        # Safely extracts quantity regardless of layout style
         quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
+        
+        # Get dynamic current price from inventory instead of cached details
+        price = 0.0
+        if item in prod:
+            prod_details = prod[item]
+            price = prod_details.get("price", 0.0) if isinstance(prod_details, dict) else (prod_details[0] if len(prod_details) > 0 else 0.0)
+        else:
+            price = details[0] if isinstance(details, list) else details.get("price", 0.0)
         
         total += price * quantity
         prod[item]["quantity"] -= quantity
