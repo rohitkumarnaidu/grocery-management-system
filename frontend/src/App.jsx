@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import NotFound from '@/pages/NotFound';
+import ExportButton from '@/components/ui/ExportButton';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -478,11 +479,18 @@ export default function App() {
 
             {/* Admin Order History Panel */}
             <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-7">
-                <div className="p-2.5 bg-emerald-100 rounded-xl">
-                  <Receipt className="w-5 h-5 text-emerald-600" />
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 rounded-xl">
+                    <Receipt className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
+                <ExportButton
+                  label="Export Orders CSV"
+                  endpoint={`${API_URL}/orders/export`}
+                  filename={`orders-report-${new Date().toISOString().split('T')[0]}.csv`}
+                />
               </div>
 
               <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">

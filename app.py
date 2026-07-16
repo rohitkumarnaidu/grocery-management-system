@@ -157,6 +157,32 @@ def get_orders():
     orders = data.get("orders", [])
     return jsonify(orders)
 
+@app.route('/api/orders/export', methods=['GET'])
+def export_orders_csv():
+    import io
+    import csv
+    from flask import Response
+    
+    data = database.load_data()
+    orders = data.get("orders", [])
+    
+    si = io.StringIO()
+    cw = csv.writer(si)
+    
+    cw.writerow(['Order ID', 'Timestamp', 'Items', 'Total ($)'])
+    for order in orders:
+        items_str = ", ".join([f"{item.get('qty')}x {item.get('item')}" for item in order.get("items", [])])
+        cw.writerow([
+            order.get('id', ''),
+            order.get('timestamp', ''),
+            items_str,
+            f"{order.get('total', 0.0):.2f}"
+        ])
+    
+    response = Response(si.getvalue(), mimetype='text/csv')
+    response.headers['Content-Disposition'] = 'attachment; filename=orders-export.csv'
+    return response
+
 # --- Search & Filter API ---
 @app.route('/api/products/filter', methods=['GET'])
 def search_products():
