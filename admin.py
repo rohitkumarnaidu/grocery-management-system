@@ -2,6 +2,10 @@ import database
 
  
 def add_product(item, price, quantity, category="Other"):
+    if price < 0:
+        return False, "Price cannot be negative"
+    if quantity < 0:
+        return False, "Quantity cannot be negative"
     data = database.load_data()
     item = item.lower()
     if "products" not in data:
@@ -13,6 +17,8 @@ def add_product(item, price, quantity, category="Other"):
     return False, "Item already exists"
 
 def update_price(item, price):
+    if price < 0:
+        return False, "Price cannot be negative"
     data = database.load_data()
     item = item.lower()
     if item in data.get("products", {}):
@@ -28,6 +34,8 @@ def update_price(item, price):
     return False, "Product does not exist"
 
 def update_quantity(item, quantity):
+    if quantity < 0:
+        return False, "Quantity cannot be negative"
     data = database.load_data()
     item = item.lower()
     if item in data.get("products", {}):
