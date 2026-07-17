@@ -1,6 +1,18 @@
 # Grocery Management System 🛒
 
+[![API Health](https://img.shields.io/badge/API-Health%20Check-brightgreen?style=flat-square)](http://127.0.0.1:5000/api/products)
+
 A web-based grocery management system with a **React (Vite)** frontend and a **Python (Flask)** REST API backend. It supports two perspectives — **Admin** and **Customer** — for managing inventory, browsing products, and handling billing/checkout.
+
+---
+
+## Quick Links
+
+| Resource | URL |
+|----------|-----|
+| 🖥️ Frontend Dev Server | [http://localhost:5173](http://localhost:5173) |
+| ⚙️ Backend API | [http://localhost:5000](http://localhost:5000) |
+| 📖 API Reference | [Jump to API Reference ↓](#api-reference) |
 
 ---
 
@@ -47,6 +59,35 @@ The backend and frontend are decoupled: the Flask API serves data over REST, and
 - **Frontend**: React, Vite
 - **Backend**: Python 3, Flask
 - **Data Persistence**: SQLite database (`grocery.db`)
+
+---
+
+## API Reference
+
+**Base URL:** `http://127.0.0.1:5000`
+
+Use `GET /api/products` as a quick health check to confirm the Flask server is running. No authentication is required for any customer-facing route.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | Server status | None |
+| GET | `/api/products` | List all products _(health check)_ | None |
+| GET | `/api/products/filter` | Filter / search products | None |
+| POST | `/api/admin/login` | Admin login | None |
+| POST | `/api/products` | Add product | `X-Admin-Password` header |
+| PUT | `/api/products/<item>/price` | Update price | `X-Admin-Password` header |
+| PUT | `/api/products/<item>/qty` | Update quantity | `X-Admin-Password` header |
+| DELETE | `/api/products/<item>` | Delete product | `X-Admin-Password` header |
+| GET | `/api/cart` | Get cart & total | None |
+| POST | `/api/cart` | Add item to cart | None |
+| PUT | `/api/cart/<item>` | Update cart qty | None |
+| DELETE | `/api/cart/<item>` | Remove from cart | None |
+| POST | `/api/checkout` | Checkout | None |
+| GET | `/api/orders` | Order history | None |
+| GET | `/api/admin/alerts` | Low stock alerts | None |
+| GET | `/api/admin/analytics` | Sales analytics | None |
+
+> **Note:** This is a local development project. Admin mutation routes require the `X-Admin-Password: admin123` header.
 
 ---
 
