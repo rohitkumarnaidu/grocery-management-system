@@ -4,6 +4,17 @@
 import database
 
 def add_product(item, price, quantity, category="Other"):
+    if price < 0:
+        return False, "Price cannot be negative"
+    if quantity < 0:
+        return False, "Quantity cannot be negative"
+    data = database.load_data()
+    item = item.lower()
+    if "products" not in data:
+        data["products"] = {}
+    if item not in data["products"]:
+        data["products"][item] = [price, quantity, category]
+        database.save_data(data)
     """
     Adds a new product to the inventory database.
     """
@@ -26,6 +37,19 @@ def add_product(item, price, quantity, category="Other"):
         return False, f"Database error: {e}"
 
 def update_price(item, price):
+    if price < 0:
+        return False, "Price cannot be negative"
+    data = database.load_data()
+    item = item.lower()
+    if item in data.get("products", {}):
+        details = data["products"][item]
+        # Check layout style to modify the value correctly
+        if isinstance(details, list) and len(details) > 0:
+            data["products"][item][0] = price
+        elif isinstance(details, dict):
+            data["products"][item]["price"] = price
+            
+        database.save_data(data)
     """
     Updates the price of an existing product in the inventory.
     """
@@ -45,6 +69,19 @@ def update_price(item, price):
         return False, f"Database error: {e}"
 
 def update_quantity(item, quantity):
+    if quantity < 0:
+        return False, "Quantity cannot be negative"
+    data = database.load_data()
+    item = item.lower()
+    if item in data.get("products", {}):
+        details = data["products"][item]
+        # Check layout style to modify the value correctly
+        if isinstance(details, list) and len(details) > 1:
+            data["products"][item][1] = quantity
+        elif isinstance(details, dict):
+            data["products"][item]["quantity"] = quantity
+            
+        database.save_data(data)
     """
     Updates the stock quantity of an existing product in the inventory.
     """
