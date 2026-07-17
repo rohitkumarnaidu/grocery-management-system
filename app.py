@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from sympy import false
 import admin
 import customer
 import database
@@ -28,9 +27,10 @@ def index():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
-    # Fetch data safely from the central database schema
-    data = database.load_data()
-    return jsonify(data.get("products", {}))
+    try:
+        return jsonify(database.get_all_products())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
 
 # Track failed login attempts globally
 failed_attempts = 0
@@ -153,9 +153,10 @@ def checkout():
 
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
-    data = database.load_data()
-    orders = data.get("orders", [])
-    return jsonify(orders)
+    try:
+        return jsonify(database.get_all_orders())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
 
 # --- Search & Filter API ---
 @app.route('/api/products/filter', methods=['GET'])
