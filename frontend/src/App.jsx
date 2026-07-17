@@ -8,6 +8,8 @@ import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
 import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 import OrderRowSkeleton from '@/components/OrderRowSkeleton';
+import ExportButton from '@/components/ui/ExportButton';
+import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
 
 const API_URL = 'http://127.0.0.1:5000/api';
@@ -188,6 +190,9 @@ export default function App() {
             Stock Smart
           </div>
           <div className="flex items-center gap-3">
+            <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
             <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200/50 dark:border-slate-700/50">
               <button 
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
@@ -195,11 +200,13 @@ export default function App() {
                 🛒 Shop
               </button>
               <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 onClick={() => { window.location.hash = '#/admin'; }}>
                 📊 Dashboard
               </button>
             </nav>
+            {view === 'admin' && <NotificationBell />}
             <ThemeToggle />
           </div>
         </header>
@@ -529,6 +536,19 @@ export default function App() {
             </div>
 
             {/* Admin Order History Panel */}
+            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 rounded-xl">
+                    <Receipt className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
+                </div>
+                <ExportButton
+                  label="Export Orders CSV"
+                  endpoint={`${API_URL}/orders/export`}
+                  filename={`orders-report-${new Date().toISOString().split('T')[0]}.csv`}
+                />
             <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-7">
                 <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
