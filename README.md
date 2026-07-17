@@ -25,8 +25,9 @@ grocery-management-system/
 ├── admin.py            # Admin-side logic (inventory management, product CRUD)
 ├── app.py              # Flask application entry point / API routes
 ├── customer.py         # Customer-side logic (browsing, cart, checkout)
-├── database.py         # Data access layer
-├── data.json           # JSON file used for data persistence
+├── database.py         # Data access layer for SQLite
+├── grocery.db          # SQLite database file used for data persistence
+├── migrate_json_to_sqlite.py # One-time data migration script from JSON to DB
 ├── requirements.txt    # Python backend dependencies
 ├── .gitignore
 └── README.md
@@ -57,7 +58,7 @@ The backend and frontend are decoupled: the Flask API serves data over REST, and
 
 - **Frontend**: React, Vite
 - **Backend**: Python 3, Flask
-- **Data Persistence**: JSON file (`data.json`)
+- **Data Persistence**: SQLite database (`grocery.db`)
 
 ---
 
@@ -109,6 +110,9 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Migrate existing JSON data to SQLite (run once if migrating from legacy data.json)
+python migrate_json_to_sqlite.py
 
 # Run the API
 python app.py
