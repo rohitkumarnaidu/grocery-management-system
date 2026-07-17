@@ -1,11 +1,29 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 import admin
 import customer
 import database
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+connected_admins = set()
+
+@socketio.on('connect')
+def handle_connect():
+    connected_admins.add(request.sid)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    connected_admins.discard(request.sid)
+
+def emit_stock_alert(product_name, remaining_qty):
+    if remaining_qty == 0:
+        socketio.emit('stock:out', {'product_name': product_name})
+    else:
+        socketio.emit('stock:low', {'product_name': product_name, 'remaining_qty': remaining_qty})
 
 # SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
 @app.before_request
@@ -148,7 +166,22 @@ def remove_from_cart(item):
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
-    success, message = customer.checkout()
+    res = customer.checkout()
+    if isinstance(res, tuple) and len(res) == 3:
+        success, message, checked_out_items = res
+    else:
+        success, message = res
+        checked_out_items = []
+        
+    if success:
+        for item in checked_out_items:
+            name = item.get("product_name")
+            qty = item.get("remaining_qty")
+            if qty == 0:
+                emit_stock_alert(name, 0)
+            elif qty <= 5:
+                emit_stock_alert(name, qty)
+                
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/orders', methods=['GET'])
@@ -201,4 +234,4 @@ def search_products():
     )
     return jsonify(results)
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
