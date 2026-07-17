@@ -6,6 +6,7 @@ import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, S
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
+import ExportButton from '@/components/ui/ExportButton';
 import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
 
@@ -519,6 +520,19 @@ export default function App() {
             </div>
 
             {/* Admin Order History Panel */}
+            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 rounded-xl">
+                    <Receipt className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
+                </div>
+                <ExportButton
+                  label="Export Orders CSV"
+                  endpoint={`${API_URL}/orders/export`}
+                  filename={`orders-report-${new Date().toISOString().split('T')[0]}.csv`}
+                />
             <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-7">
                 <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
