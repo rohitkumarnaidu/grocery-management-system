@@ -87,7 +87,7 @@ def view_total_price():
             total_price += cart[item].get("price", 0) * cart[item].get("quantity", 0)
     return total_price
 
-def checkout():
+def checkout(coupon_code=None):
     data = database.load_data()
     cart = data.get("cart", {})
     
@@ -95,28 +95,42 @@ def checkout():
         return False, "Cart is empty"
         
     prod = data.get("products", {})
-    total = 0
+    subtotal = 0
     items_list = []
     
     unavailable_items = []
     for item, details in cart.items():
-        # Safely extracts quantity regardless of layout style
         quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
         if item not in prod or prod[item]["quantity"] < quantity:
             unavailable_items.append(item)
             
     if unavailable_items:
-        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
+        return False, f"Checkout failed. Insufficient stock for: {', '.join(unavailable_items)}."
             
     for item, details in cart.items():
-        # Safely extracts price and quantity regardless of layout style
         price = details[0] if isinstance(details, list) else details.get("price", 0.0)
         quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
         
-        total += price * quantity
+        # --- Optional Bulk-Buy Logic (Buy 3 get 1 free style calculation if item matches a rule) ---
+        # If buying 3 or more of the same item, charge for quantity - (quantity // 4)
+        if quantity >= 4:
+            billable_qty = quantity - (quantity // 4)
+            subtotal += price * billable_qty
+        else:
+            subtotal += price * quantity
+            
         prod[item]["quantity"] -= quantity
         items_list.append({"item": item, "price": price, "qty": quantity})
         
+    # Apply promotional coupons if supplied
+    discount_amount = 0.0
+    if coupon_code:
+        is_valid, result = validate_coupon(coupon_code, subtotal)
+        if not is_valid:
+            return False, f"Checkout aborted: {result}"
+        discount_amount = result
+        
+    total = max(0.0, subtotal - discount_amount)
     order_id = str(uuid.uuid4())[:8].upper()
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     
@@ -124,7 +138,10 @@ def checkout():
         "id": order_id,
         "timestamp": timestamp,
         "items": items_list,
-        "total": total
+        "subtotal": round(subtotal, 2),
+        "coupon_applied": coupon_code.upper() if coupon_code else None,
+        "discount_applied": discount_amount,
+        "total": round(total, 2)
     }
     
     if "orders" not in data:
