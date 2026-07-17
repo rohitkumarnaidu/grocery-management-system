@@ -6,6 +6,7 @@ import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, S
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
+import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
 
 const API_URL = 'http://127.0.0.1:5000/api';
@@ -182,6 +183,9 @@ export default function App() {
             Stock Smart
           </div>
           <div className="flex items-center gap-3">
+            <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
             <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200/50 dark:border-slate-700/50">
               <button 
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
@@ -189,11 +193,13 @@ export default function App() {
                 🛒 Shop
               </button>
               <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 onClick={() => { window.location.hash = '#/admin'; }}>
                 📊 Dashboard
               </button>
             </nav>
+            {view === 'admin' && <NotificationBell />}
             <ThemeToggle />
           </div>
         </header>

@@ -235,7 +235,7 @@ def checkout(coupon_code=None):
     cart = data.get("cart", {})
     
     if not cart:
-        return False, "Cart is empty"
+        return False, "Cart is empty", []
         
     prod = data.get("products", {})
     subtotal = 0
@@ -248,8 +248,10 @@ def checkout(coupon_code=None):
             unavailable_items.append(item)
             
     if unavailable_items:
+        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart.", []
         return False, f"Checkout failed. Insufficient stock for: {', '.join(unavailable_items)}."
             
+    checked_out_items = []
     for item, details in cart.items():
         # Safely extracts quantity regardless of layout style
         quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
@@ -276,6 +278,7 @@ def checkout(coupon_code=None):
             
         prod[item]["quantity"] -= quantity
         items_list.append({"item": item, "price": price, "qty": quantity})
+        checked_out_items.append({"product_name": item, "remaining_qty": prod[item]["quantity"]})
         
     # Apply promotional coupons if supplied
     discount_amount = 0.0
@@ -302,6 +305,15 @@ def checkout(coupon_code=None):
     if "orders" not in data:
         data["orders"] = []
         
+    data["orders"].insert(0, order)
+    data["cart"] = {}
+    
+    database.save_data(data)
+    
+    # --- ADD THIS LINE TO GENERATE THE BILL ---
+    receipt_path = generate_receipt_file(order)
+    
+    return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}", checked_out_items
         conn.commit()
         conn.close()
         
