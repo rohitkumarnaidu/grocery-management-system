@@ -6,6 +6,8 @@ import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, S
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
+import ProductCardSkeleton from '@/components/ProductCardSkeleton';
+import OrderRowSkeleton from '@/components/OrderRowSkeleton';
 import ExportButton from '@/components/ui/ExportButton';
 import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
@@ -36,6 +38,7 @@ const getViewFromHash = () => {
 export default function App() {
   const [view, setView] = useState(getViewFromHash);
   const [inventory, setInventory] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [cart, setCart] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
   const [orders, setOrders] = useState([]);
@@ -50,7 +53,8 @@ export default function App() {
   const [adminCategoryFilter, setAdminCategoryFilter] = useState('All');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (showSkeleton = false) => {
+    if (showSkeleton) setIsLoading(true);
     try {
       const prodRes = await fetch(`${API_URL}/products`);
       if (prodRes.ok) setInventory(await prodRes.json());
@@ -66,11 +70,13 @@ export default function App() {
       if (ordersRes.ok) setOrders(await ordersRes.json());
     } catch (e) {
       console.error('API Error:', e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
   }, []);
 
   // Sync view with hash changes (back/forward navigation + direct URL edits)
@@ -249,7 +255,9 @@ export default function App() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {Object.keys(inventory).length === 0 ? (
+                  {isLoading ? (
+                    [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
+                  ) : Object.keys(inventory).length === 0 ? (
                      <div className="col-span-full text-center text-slate-400 py-16 flex flex-col items-center gap-4">
                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
                          <Sparkles className="w-7 h-7 text-slate-300" />
@@ -449,6 +457,13 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                {isLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 p-5">
+                    {[...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)}
+                  </div>
+                ) : (
+                  <Table>
               <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
                 <Table>
                   <TableHeader>
@@ -516,6 +531,7 @@ export default function App() {
                     )}
                   </TableBody>
                 </Table>
+                )}
               </div>
             </div>
 
@@ -552,7 +568,9 @@ export default function App() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orders.length === 0 ? (
+                    {isLoading ? (
+                      [...Array(5)].map((_, i) => <OrderRowSkeleton key={i} />)
+                    ) : orders.length === 0 ? (
                       <TableRow className="border-0">
                         <TableCell colSpan={4} className="text-center py-14 text-slate-400 font-medium">No orders yet</TableCell>
                       </TableRow>
