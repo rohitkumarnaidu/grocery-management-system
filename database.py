@@ -27,9 +27,16 @@ def init_db():
         name TEXT UNIQUE NOT NULL,
         price REAL NOT NULL,
         quantity INTEGER NOT NULL,
-        category TEXT NOT NULL
+        category TEXT NOT NULL,
+        is_archived INTEGER DEFAULT 0
     );
     """)
+    
+    # Check if is_archived column exists, add if not (for migration)
+    cursor.execute("PRAGMA table_info(products)")
+    columns = [col['name'] for col in cursor.fetchall()]
+    if 'is_archived' not in columns:
+        cursor.execute("ALTER TABLE products ADD COLUMN is_archived INTEGER DEFAULT 0")
     
     # Orders table
     cursor.execute("""
@@ -65,16 +72,19 @@ def init_db():
     conn.close()
 
 # Helper queries to keep app.py and modules clean
-def get_all_products():
+def get_all_products(include_archived=False):
     """
     Returns products in the dictionary format expected by the frontend.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT name, price, quantity, category FROM products")
+    if include_archived:
+        cursor.execute("SELECT name, price, quantity, category, is_archived FROM products")
+    else:
+        cursor.execute("SELECT name, price, quantity, category, is_archived FROM products WHERE is_archived = 0")
     products = {}
     for row in cursor.fetchall():
-        products[row['name']] = [row['price'], row['quantity'], row['category']]
+        products[row['name']] = [row['price'], row['quantity'], row['category'], row['is_archived']]
     conn.close()
     return products
 

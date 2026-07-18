@@ -121,6 +121,44 @@ def delete_item(item):
     except Exception as e:
         return False, f"Database error: {e}"
 
+def archive_product(item):
+    """
+    Archives a product in the inventory.
+    """
+    item = item.strip().lower()
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM products WHERE name = ?", (item,))
+        if not cursor.fetchone():
+            conn.close()
+            return False, "Product does not exist"
+        cursor.execute("UPDATE products SET is_archived = 1 WHERE name = ?", (item,))
+        conn.commit()
+        conn.close()
+        return True, "Product archived successfully!"
+    except Exception as e:
+        return False, f"Database error: {e}"
+
+def restore_product(item):
+    """
+    Restores an archived product in the inventory.
+    """
+    item = item.strip().lower()
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM products WHERE name = ?", (item,))
+        if not cursor.fetchone():
+            conn.close()
+            return False, "Product does not exist"
+        cursor.execute("UPDATE products SET is_archived = 0 WHERE name = ?", (item,))
+        conn.commit()
+        conn.close()
+        return True, "Product restored successfully!"
+    except Exception as e:
+        return False, f"Database error: {e}"
+
 def get_low_stock_alerts(threshold=5):
     """
     Scans the inventory database and returns products with stock below threshold.

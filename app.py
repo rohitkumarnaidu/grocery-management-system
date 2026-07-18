@@ -129,6 +129,25 @@ def delete_product(item):
     success, message = admin.delete_item(item)
     return jsonify({"success": success, "message": message})
 
+@app.route('/api/products/<item>/archive', methods=['PUT'])
+def archive_product(item):
+    success, message = admin.archive_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/<item>/restore', methods=['PUT'])
+def restore_product(item):
+    success, message = admin.restore_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/archived', methods=['GET'])
+def get_archived_products():
+    try:
+        all_products = database.get_all_products(include_archived=True)
+        archived = {k: v for k, v in all_products.items() if v[3] == 1}
+        return jsonify(archived)
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
+
 # --- Customer API ---
 
 @app.route('/api/cart', methods=['GET'])
