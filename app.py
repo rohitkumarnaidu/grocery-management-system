@@ -28,7 +28,12 @@ def emit_stock_alert(product_name, remaining_qty):
 # SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
 @app.before_request
 def authenticate_admin():
-    if request.path.startswith('/api/products') and request.method != 'GET':
+    admin_protected = (
+        (request.path.startswith('/api/products') and request.method != 'GET') or
+        request.path.endswith('/restore') or
+        request.path.endswith('/permanent')
+    )
+    if admin_protected:
         admin_password = request.headers.get('X-Admin-Password')
         
         # if admin_password != 'admin123':
@@ -36,7 +41,7 @@ def authenticate_admin():
 
         # Fallback to the original plaintext check to keep Issue #11 isolated and functional
         if admin_password != 'admin123':
-            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401     
+            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
 @app.route('/')
 def index():
     return jsonify({"status": "API is running"})
@@ -125,8 +130,29 @@ def update_qty(item):
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>', methods=['DELETE'])
-def delete_product(item):
-    success, message = admin.delete_item(item)
+def archive_product(item):
+    """Archives a product (soft-delete) — replaces permanent delete for safety."""
+    success, message = admin.archive_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/archived', methods=['GET'])
+def get_archived_products():
+    """Returns all archived products for the admin archive panel."""
+    try:
+        return jsonify(database.get_archived_products())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
+
+@app.route('/api/products/<item>/restore', methods=['POST'])
+def restore_product(item):
+    """Restores an archived product back to active inventory."""
+    success, message = admin.restore_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/<item>/permanent', methods=['DELETE'])
+def permanently_delete_product(item):
+    """Permanently deletes an archived product. Irreversible."""
+    success, message = admin.permanently_delete_product(item)
     return jsonify({"success": success, "message": message})
 
 # --- Customer API ---

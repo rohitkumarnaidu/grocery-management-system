@@ -100,24 +100,78 @@ def update_quantity(item, quantity):
     except Exception as e:
         return False, f"Database error: {e}"
 
-def delete_item(item):
+def archive_product(item):
     """
-    Deletes a product from the database (also cascades deletes to cart).
+    Archives a product by setting its archived flag to 1 (soft-delete).
+    Archived products are hidden from the active inventory and the customer shop,
+    but their data is preserved and can be restored at any time.
     """
     item = item.strip().lower()
     try:
         conn = database.get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM products WHERE name = ?", (item,))
+        cursor.execute("SELECT id, archived FROM products WHERE name = ?", (item,))
         row = cursor.fetchone()
         if not row:
             conn.close()
             return False, "Product does not exist"
+        if row['archived'] == 1:
+            conn.close()
+            return False, "Product is already archived"
+        cursor.execute("UPDATE products SET archived = 1 WHERE name = ?", (item,))
+        conn.commit()
+        conn.close()
+        return True, "Product archived successfully!"
+    except Exception as e:
+        return False, f"Database error: {e}"
+
+def restore_product(item):
+    """
+    Restores an archived product by setting its archived flag back to 0.
+    The product will reappear in the active inventory and the customer shop.
+    """
+    item = item.strip().lower()
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, archived FROM products WHERE name = ?", (item,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return False, "Product does not exist"
+        if row['archived'] == 0:
+            conn.close()
+            return False, "Product is not archived"
+        cursor.execute("UPDATE products SET archived = 0 WHERE name = ?", (item,))
+        conn.commit()
+        conn.close()
+        return True, "Product restored successfully!"
+    except Exception as e:
+        return False, f"Database error: {e}"
+
+def permanently_delete_product(item):
+    """
+    Permanently deletes a product from the database.
+    Only works on products that are already archived as a safety guard.
+    This action is irreversible.
+    """
+    item = item.strip().lower()
+    try:
+        conn = database.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, archived FROM products WHERE name = ?", (item,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return False, "Product does not exist"
+        if row['archived'] == 0:
+            conn.close()
+            return False, "Product must be archived before it can be permanently deleted"
         pid = row['id']
         cursor.execute("DELETE FROM products WHERE id = ?", (pid,))
         conn.commit()
         conn.close()
-        return True, "Deleted successfully!"
+        return True, "Product permanently deleted!"
     except Exception as e:
         return False, f"Database error: {e}"
 
