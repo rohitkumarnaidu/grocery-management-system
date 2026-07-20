@@ -27,9 +27,17 @@ def init_db():
         name TEXT UNIQUE NOT NULL,
         price REAL NOT NULL,
         quantity INTEGER NOT NULL,
-        category TEXT NOT NULL
+        category TEXT NOT NULL,
+        archived INTEGER NOT NULL DEFAULT 0
     );
     """)
+
+    # Migration: add archived column to existing databases that pre-date this feature
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists — safe to ignore
     
     # Orders table
     cursor.execute("""
@@ -67,16 +75,34 @@ def init_db():
 # Helper queries to keep app.py and modules clean
 def get_all_products():
     """
-    Returns products in the dictionary format expected by the frontend.
+    Returns active (non-archived) products in the dictionary format expected by the frontend.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT name, price, quantity, category FROM products")
+    cursor.execute("SELECT name, price, quantity, category FROM products WHERE archived = 0")
     products = {}
     for row in cursor.fetchall():
         products[row['name']] = [row['price'], row['quantity'], row['category']]
     conn.close()
     return products
+
+def get_archived_products():
+    """
+    Returns archived products as a list of dicts for the admin archive panel.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, price, quantity, category FROM products WHERE archived = 1")
+    archived = []
+    for row in cursor.fetchall():
+        archived.append({
+            'name': row['name'],
+            'price': row['price'],
+            'quantity': row['quantity'],
+            'category': row['category']
+        })
+    conn.close()
+    return archived
 
 def get_all_orders():
     """

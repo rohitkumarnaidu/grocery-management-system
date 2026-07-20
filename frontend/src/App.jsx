@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf } from 'lucide-react';
+import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf, Archive, RotateCcw, AlertTriangle } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
@@ -52,6 +52,9 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [adminCategoryFilter, setAdminCategoryFilter] = useState('All');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [archivedProducts, setArchivedProducts] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [actionToast, setActionToast] = useState(null); // { message, type: 'success'|'error' }
 
   const loadData = async (showSkeleton = false) => {
     if (showSkeleton) setIsLoading(true);
@@ -68,11 +71,19 @@ export default function App() {
 
       const ordersRes = await fetch(`${API_URL}/orders`);
       if (ordersRes.ok) setOrders(await ordersRes.json());
+
+      const archivedRes = await fetch(`${API_URL}/products/archived`);
+      if (archivedRes.ok) setArchivedProducts(await archivedRes.json());
     } catch (e) {
       console.error('API Error:', e);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const showToast = (message, type = 'success') => {
+    setActionToast({ message, type });
+    setTimeout(() => setActionToast(null), 3000);
   };
 
   useEffect(() => {
@@ -152,7 +163,33 @@ export default function App() {
   };
 
   const deleteProduct = async (item) => {
-    await fetch(`${API_URL}/products/${item}`, { method: 'DELETE' });
+    const res = await fetch(`${API_URL}/products/${item}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Password': 'admin123' }
+    });
+    const data = await res.json();
+    showToast(data.message, data.success ? 'success' : 'error');
+    loadData();
+  };
+
+  const restoreProduct = async (item) => {
+    const res = await fetch(`${API_URL}/products/${item}/restore`, {
+      method: 'POST',
+      headers: { 'X-Admin-Password': 'admin123' }
+    });
+    const data = await res.json();
+    showToast(data.message, data.success ? 'success' : 'error');
+    loadData();
+  };
+
+  const permanentlyDeleteProduct = async (item) => {
+    if (!window.confirm(`⚠️ Permanently delete "${item}"? This cannot be undone.`)) return;
+    const res = await fetch(`${API_URL}/products/${item}/permanent`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Password': 'admin123' }
+    });
+    const data = await res.json();
+    showToast(data.message, data.success ? 'success' : 'error');
     loadData();
   };
 
@@ -176,6 +213,18 @@ export default function App() {
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-white px-6 py-4 rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-3 animate-bounce">
           <span className="text-xl">✓</span>
           <span className="font-semibold">Order placed successfully!</span>
+        </div>
+      )}
+
+      {/* Action toast (archive / restore / delete) */}
+      {actionToast && (
+        <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3 animate-bounce ${
+          actionToast.type === 'success'
+            ? 'bg-violet-600 text-white shadow-violet-500/20'
+            : 'bg-red-500 text-white shadow-red-500/20'
+        }`}>
+          <span className="text-xl">{actionToast.type === 'success' ? '✓' : '✕'}</span>
+          <span className="font-semibold">{actionToast.message}</span>
         </div>
       )}
       
@@ -521,8 +570,12 @@ export default function App() {
                               <Input type="number" className="w-20 ml-auto h-9 bg-slate-50 border-slate-200 text-slate-700 text-right px-3 rounded-lg focus:border-violet-400 focus:ring-1 focus:ring-violet-400" defaultValue={qty} onBlur={(e) => updateProductQty(item, e.target.value)} />
                             </TableCell>
                             <TableCell className="text-right px-4 py-4">
-                              <button className="text-slate-300 hover:text-red-500 p-2 rounded-xl hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" onClick={() => deleteProduct(item)} title="Delete">
-                                <Trash2 className="w-4 h-4" />
+                              <button
+                                className="text-slate-300 hover:text-amber-500 p-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                onClick={() => deleteProduct(item)}
+                                title="Archive product"
+                              >
+                                <Archive className="w-4 h-4" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -535,7 +588,105 @@ export default function App() {
               </div>
             </div>
 
-            {/* Admin Order History Panel */}
+            {/* Archived Products Panel */}
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-amber-200/60 dark:border-amber-700/40 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-100 dark:bg-amber-900/40 rounded-xl">
+                    <Archive className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Archived Products</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Restore or permanently delete archived items</p>
+                  </div>
+                  {archivedProducts.length > 0 && (
+                    <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-700">
+                      {archivedProducts.length}
+                    </span>
+                  )}
+                </div>
+                <button
+                  id="toggle-archived-panel"
+                  className="text-sm font-semibold px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all flex items-center gap-2"
+                  onClick={() => setShowArchived(v => !v)}
+                >
+                  <Archive className="w-4 h-4" />
+                  {showArchived ? 'Hide Archived' : 'Show Archived'}
+                </button>
+              </div>
+
+              {showArchived && (
+                archivedProducts.length === 0 ? (
+                  <div className="text-center py-14 flex flex-col items-center gap-3 text-slate-400">
+                    <div className="w-14 h-14 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+                      <Archive className="w-6 h-6 text-amber-300" />
+                    </div>
+                    <p className="font-medium">No archived products</p>
+                    <p className="text-sm">Archived products will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-2xl border border-amber-100 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-900/10">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-amber-100 dark:border-amber-800/50 hover:bg-transparent bg-amber-50/60 dark:bg-amber-900/20">
+                          <TableHead className="text-amber-600 dark:text-amber-400 font-semibold h-12 px-6 text-xs uppercase tracking-wider">Product</TableHead>
+                          <TableHead className="text-amber-600 dark:text-amber-400 font-semibold h-12 text-xs uppercase tracking-wider">Category</TableHead>
+                          <TableHead className="text-amber-600 dark:text-amber-400 font-semibold text-right h-12 text-xs uppercase tracking-wider">Price</TableHead>
+                          <TableHead className="text-amber-600 dark:text-amber-400 font-semibold text-right h-12 text-xs uppercase tracking-wider">Stock (at archive)</TableHead>
+                          <TableHead className="h-12 w-40 text-amber-600 dark:text-amber-400 font-semibold text-xs uppercase tracking-wider">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {archivedProducts.map(product => (
+                          <TableRow
+                            key={product.name}
+                            className="border-amber-100/60 dark:border-amber-800/30 hover:bg-amber-50/60 dark:hover:bg-amber-900/20 transition-colors group"
+                          >
+                            <TableCell className="capitalize font-semibold text-slate-600 dark:text-slate-300 px-6 py-4">
+                              <span className="mr-2">{CATEGORY_EMOJI[product.category] || '📦'}</span>
+                              <span className="line-through opacity-60">{product.name}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 text-[11px] font-bold tracking-wider uppercase">
+                                {product.category}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right py-4 text-slate-500 dark:text-slate-400 font-medium">
+                              ${product.price.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right py-4 text-slate-500 dark:text-slate-400 font-medium">
+                              {product.quantity} units
+                            </TableCell>
+                            <TableCell className="py-4 px-4">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  id={`restore-${product.name}`}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all"
+                                  onClick={() => restoreProduct(product.name)}
+                                  title="Restore product"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  Restore
+                                </button>
+                                <button
+                                  id={`delete-forever-${product.name}`}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/40 transition-all"
+                                  onClick={() => permanentlyDeleteProduct(product.name)}
+                                  title="Permanently delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Delete Forever
+                                </button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
+              )}
+            </div>
             <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
                 <div className="flex items-center gap-3">
