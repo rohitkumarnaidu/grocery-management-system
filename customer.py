@@ -230,102 +230,20 @@ def checkout():
             
         # Clear Cart
         cursor.execute("DELETE FROM cart")
-def checkout(coupon_code=None):
-    data = database.load_data()
-    cart = data.get("cart", {})
-    
-    if not cart:
-        return False, "Cart is empty", []
         
-    prod = data.get("products", {})
-    subtotal = 0
-    items_list = []
-    
-    unavailable_items = []
-    for item, details in cart.items():
-        quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
-        if item not in prod or prod[item]["quantity"] < quantity:
-            unavailable_items.append(item)
-            
-    if unavailable_items:
-        return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart.", []
-        return False, f"Checkout failed. Insufficient stock for: {', '.join(unavailable_items)}."
-            
-    checked_out_items = []
-    for item, details in cart.items():
-        # Safely extracts quantity regardless of layout style
-        quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
-        
-        # Get dynamic current price from inventory instead of cached details
-        price = 0.0
-        if item in prod:
-            prod_details = prod[item]
-            price = prod_details.get("price", 0.0) if isinstance(prod_details, dict) else (prod_details[0] if len(prod_details) > 0 else 0.0)
-        else:
-            price = details[0] if isinstance(details, list) else details.get("price", 0.0)
-        
-        total += price * quantity
-        price = details[0] if isinstance(details, list) else details.get("price", 0.0)
-        quantity = details[1] if isinstance(details, list) else details.get("quantity", 0)
-        
-        # --- Optional Bulk-Buy Logic (Buy 3 get 1 free style calculation if item matches a rule) ---
-        # If buying 3 or more of the same item, charge for quantity - (quantity // 4)
-        if quantity >= 4:
-            billable_qty = quantity - (quantity // 4)
-            subtotal += price * billable_qty
-        else:
-            subtotal += price * quantity
-            
-        prod[item]["quantity"] -= quantity
-        items_list.append({"item": item, "price": price, "qty": quantity})
-        checked_out_items.append({"product_name": item, "remaining_qty": prod[item]["quantity"]})
-        
-    # Apply promotional coupons if supplied
-    discount_amount = 0.0
-    if coupon_code:
-        is_valid, result = validate_coupon(coupon_code, subtotal)
-        if not is_valid:
-            return False, f"Checkout aborted: {result}"
-        discount_amount = result
-        
-    total = max(0.0, subtotal - discount_amount)
-    order_id = str(uuid.uuid4())[:8].upper()
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    
-    order = {
-        "id": order_id,
-        "timestamp": timestamp,
-        "items": items_list,
-        "subtotal": round(subtotal, 2),
-        "coupon_applied": coupon_code.upper() if coupon_code else None,
-        "discount_applied": discount_amount,
-        "total": round(total, 2)
-    }
-    
-    if "orders" not in data:
-        data["orders"] = []
-        
-    data["orders"].insert(0, order)
-    data["cart"] = {}
-    
-    database.save_data(data)
-    
-    # --- ADD THIS LINE TO GENERATE THE BILL ---
-    receipt_path = generate_receipt_file(order)
-    
-    return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}", checked_out_items
+        #Complete the checkout transaction after clearing the cart.
         conn.commit()
         conn.close()
-        
+
         order = {
             "id": order_id,
             "timestamp": timestamp,
             "items": items_list,
             "total": total
         }
-        
         receipt_path = generate_receipt_file(order)
         return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}"
+
     except Exception as e:
         return False, f"Database error during checkout: {e}"
 
