@@ -28,13 +28,21 @@ def init_db():
         price REAL NOT NULL,
         quantity INTEGER NOT NULL,
         category TEXT NOT NULL,
-        archived INTEGER NOT NULL DEFAULT 0
+        archived INTEGER NOT NULL DEFAULT 0,
+        image_url TEXT DEFAULT ''
     );
     """)
 
     # Migration: add archived column to existing databases that pre-date this feature
     try:
         cursor.execute("ALTER TABLE products ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists — safe to ignore
+
+    # Migration: add image_url column to existing databases that pre-date this feature
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN image_url TEXT DEFAULT ''")
         conn.commit()
     except Exception:
         pass  # Column already exists — safe to ignore
@@ -79,10 +87,10 @@ def get_all_products():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT name, price, quantity, category FROM products WHERE archived = 0")
+    cursor.execute("SELECT name, price, quantity, category, image_url FROM products WHERE archived = 0")
     products = {}
     for row in cursor.fetchall():
-        products[row['name']] = [row['price'], row['quantity'], row['category']]
+        products[row['name']] = [row['price'], row['quantity'], row['category'], row['image_url']]
     conn.close()
     return products
 

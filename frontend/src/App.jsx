@@ -48,6 +48,7 @@ export default function App() {
   const [newPrice, setNewPrice] = useState('');
   const [newQty, setNewQty] = useState('');
   const [newCategory, setNewCategory] = useState('Other');
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [adminCategoryFilter, setAdminCategoryFilter] = useState('All');
@@ -135,32 +136,41 @@ export default function App() {
 
   const addProduct = async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item: newItem, price: parseFloat(newPrice), qty: parseInt(newQty), category: newCategory })
-    });
-    setNewItem(''); setNewPrice(''); setNewQty(''); setNewCategory('Other');
-    loadData();
+    try {
+      const res = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': 'admin123' },
+        body: JSON.stringify({ item: newItem, price: parseFloat(newPrice), qty: parseInt(newQty), category: newCategory, image_url: newImageUrl })
+      });
+      const data = await res.json();
+      showToast(data.message, data.success ? 'success' : 'error');
+      if (data.success) {
+        setNewItem(''); setNewPrice(''); setNewQty(''); setNewCategory('Other'); setNewImageUrl('');
+      }
+    } catch (err) {
+      showToast('Network error — could not add product.', 'error');
+    }
+    await loadData();
   };
 
   const updateProductPrice = async (item, price) => {
     await fetch(`${API_URL}/products/${item}/price`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': 'admin123' },
       body: JSON.stringify({ price: parseFloat(price) })
     });
-    loadData();
+    await loadData();
   };
 
   const updateProductQty = async (item, qty) => {
     await fetch(`${API_URL}/products/${item}/qty`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': 'admin123' },
       body: JSON.stringify({ qty: parseInt(qty) })
     });
-    loadData();
+    await loadData();
   };
+
 
   const deleteProduct = async (item) => {
     const res = await fetch(`${API_URL}/products/${item}`, {
@@ -239,9 +249,6 @@ export default function App() {
             Stock Smart
           </div>
           <div className="flex items-center gap-3">
-            <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 rounded-full border border-slate-200/50">
-              <button 
-                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
             <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200/50 dark:border-slate-700/50">
               <button 
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'customer' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
@@ -249,7 +256,6 @@ export default function App() {
                 🛒 Shop
               </button>
               <button 
-                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white text-violet-700 shadow-md shadow-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 onClick={() => { window.location.hash = '#/admin'; }}>
                 📊 Dashboard
@@ -334,29 +340,46 @@ export default function App() {
                       const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
                       return matchesCategory && matchesSearch;
                     }).map(item => {
-                      const [price, qty, category = 'Other'] = inventory[item];
+                      const [price, qty, category = 'Other', imageUrl = ''] = inventory[item];
                       return (
-                        <div key={item} className="group relative border border-slate-200/60 dark:border-slate-700/60 rounded-2xl p-5 bg-white dark:bg-slate-800/80 hover:border-violet-300 dark:hover:border-violet-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 transition-all duration-400">
+                        <div key={item} className="group relative border border-slate-200/60 dark:border-slate-700/60 rounded-2xl overflow-hidden bg-white dark:bg-slate-800/80 hover:border-violet-300 dark:hover:border-violet-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 transition-all duration-400 flex flex-col">
                           
-                          <div className="text-3xl mb-4 flex justify-center">
-                            {CATEGORY_EMOJI[category] || '📦'}
-                          </div>
-                          <div className="font-bold text-slate-800 dark:text-slate-100 capitalize text-base mb-0.5 text-center">{item}</div>
-                          <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-500 dark:text-violet-400 mb-4 text-center">{category}</div>
-                          
-                          <div className="flex items-end justify-center gap-0.5 mb-4">
-                            <span className="text-sm text-slate-400 mb-0.5 font-medium">$</span>
-                            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{price}</span>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-5 bg-slate-50 dark:bg-slate-700/50 px-3.5 py-2 rounded-xl border border-slate-100 dark:border-slate-600/50">
-                            <span className="font-medium">In Stock</span>
-                            <span className={qty > 0 ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{qty > 0 ? `${qty} units` : 'Sold Out'}</span>
+                          {/* Product Image */}
+                          <div className="w-full h-36 bg-gradient-to-br from-slate-100 to-violet-50 dark:from-slate-700 dark:to-violet-900/30 flex items-center justify-center overflow-hidden relative">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={item}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
+                              />
+                            ) : null}
+                            <div
+                              className="absolute inset-0 flex items-center justify-center text-5xl"
+                              style={{ display: imageUrl ? 'none' : 'flex' }}
+                            >
+                              {CATEGORY_EMOJI[category] || '📦'}
+                            </div>
                           </div>
 
-                          <UiverseButton className="w-full text-sm font-semibold h-11" disabled={qty === 0} onClick={() => addToCart(item)}>
-                            <Plus className="w-4 h-4 mr-1.5"/> Add to Cart
-                          </UiverseButton>
+                          <div className="p-5 flex flex-col flex-1">
+                            <div className="font-bold text-slate-800 dark:text-slate-100 capitalize text-base mb-0.5 text-center">{item}</div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-500 dark:text-violet-400 mb-4 text-center">{category}</div>
+                            
+                            <div className="flex items-end justify-center gap-0.5 mb-4">
+                              <span className="text-sm text-slate-400 mb-0.5 font-medium">$</span>
+                              <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">{price}</span>
+                            </div>
+                            
+                            <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 mb-5 bg-slate-50 dark:bg-slate-700/50 px-3.5 py-2 rounded-xl border border-slate-100 dark:border-slate-600/50">
+                              <span className="font-medium">In Stock</span>
+                              <span className={qty > 0 ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{qty > 0 ? `${qty} units` : 'Sold Out'}</span>
+                            </div>
+
+                            <UiverseButton className="w-full text-sm font-semibold h-11 mt-auto" disabled={qty === 0} onClick={() => addToCart(item)}>
+                              <Plus className="w-4 h-4 mr-1.5"/> Add to Cart
+                            </UiverseButton>
+                          </div>
                         </div>
                       )
                     })
@@ -471,20 +494,19 @@ export default function App() {
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Add New Product</h2>
               </div>
               
-              <form onSubmit={addProduct} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+              <form onSubmit={addProduct} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4">
                 <Input placeholder="Product name" className="md:col-span-1 bg-white border-slate-200 text-slate-700 h-12 rounded-xl focus:border-violet-400 focus:ring-1 focus:ring-violet-400 placeholder:text-slate-400" value={newItem} onChange={e => setNewItem(e.target.value)} required />
                 <Input type="number" step="0.01" min="0" placeholder="Price ($)" className="md:col-span-1 bg-white border-slate-200 text-slate-700 h-12 rounded-xl focus:border-violet-400 focus:ring-1 focus:ring-violet-400 placeholder:text-slate-400" value={newPrice} onChange={e => setNewPrice(e.target.value)} required />
                 <Input type="number" min="1" placeholder="Stock qty" className="md:col-span-1 bg-white border-slate-200 text-slate-700 h-12 rounded-xl focus:border-violet-400 focus:ring-1 focus:ring-violet-400 placeholder:text-slate-400" value={newQty} onChange={e => setNewQty(e.target.value)} required />
                 <select className="md:col-span-1 bg-white border-slate-200 text-slate-700 rounded-xl px-4 border text-sm h-12 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
                   {CATEGORIES.map(cat => <option key={cat} value={cat}>{CATEGORY_EMOJI[cat]} {cat}</option>)}
                 </select>
+                <Input placeholder="Image URL (optional)" className="md:col-span-1 bg-white border-slate-200 text-slate-700 h-12 rounded-xl focus:border-violet-400 focus:ring-1 focus:ring-violet-400 placeholder:text-slate-400" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} />
                 <UiverseButton type="submit" className="md:col-span-1 h-12 text-sm font-semibold rounded-xl">Add Product</UiverseButton>
               </form>
             </div>
 
             {/* Inventory Panel */}
-            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-7">
             <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-7">
                 <div className="flex items-center gap-3">
@@ -506,15 +528,13 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
                 {isLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 p-5">
                     {[...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)}
                   </div>
                 ) : (
                   <Table>
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
-                <Table>
                   <TableHeader>
                     <TableRow className="border-slate-100 hover:bg-transparent bg-slate-50">
                       <TableHead className="text-slate-500 font-semibold h-12 px-6 text-xs uppercase tracking-wider">Product</TableHead>
@@ -687,27 +707,20 @@ export default function App() {
                 )
               )}
             </div>
-            <div className="bg-white/60 border border-slate-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-100 rounded-xl">
-                    <Receipt className="w-5 h-5 text-emerald-600" />
+                  <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
+                    <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">Order Ledger</h2>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Order Ledger</h2>
                 </div>
                 <ExportButton
                   label="Export Orders CSV"
                   endpoint={`${API_URL}/orders/export`}
                   filename={`orders-report-${new Date().toISOString().split('T')[0]}.csv`}
                 />
-            <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-7">
-                <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl">
-                  <Receipt className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Order Ledger</h2>
               </div>
-
               <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80">
                 <Table>
                   <TableHeader>
