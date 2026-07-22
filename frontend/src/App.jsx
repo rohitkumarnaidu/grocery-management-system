@@ -128,7 +128,11 @@ export default function App() {
     loadData();
   };
 
-  const cartItemCount = Object.values(cart).reduce((sum, [, qty]) => sum + qty, 0);
+  const cartItemCount = Object.values(cart).reduce((sum, item) => {
+    if (Array.isArray(item)) return sum + (item[1] || 0);
+    if (item && typeof item === 'object') return sum + (item.quantity ?? item.qty ?? 0);
+    return sum;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30 text-slate-800 flex flex-col items-center overflow-x-hidden font-sans selection:bg-violet-200 relative">
@@ -203,7 +207,7 @@ export default function App() {
                   </div>
                   <span className="text-sm text-slate-400 font-medium">
                     {Object.keys(inventory).filter(item => {
-                      const [, , category = 'Other'] = inventory[item];
+                      const { category = 'Other' } = inventory[item];
                       return selectedCategory === 'All' || category === selectedCategory;
                     }).length} items
                   </span>
@@ -220,10 +224,10 @@ export default function App() {
                      </div>
                   ) : (
                     Object.keys(inventory).filter(item => {
-                      const [, , category = 'Other'] = inventory[item];
+                      const { category = 'Other' } = inventory[item];
                       return selectedCategory === 'All' || category === selectedCategory;
                     }).map(item => {
-                      const [price, qty, category = 'Other'] = inventory[item];
+                      const { price, qty, category = 'Other' } = inventory[item];
                       return (
                         <div key={item} className="group relative border border-slate-200/60 rounded-2xl p-5 bg-white hover:border-violet-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 transition-all duration-400">
                           
@@ -276,7 +280,9 @@ export default function App() {
                       </div>
                     ) : (
                       Object.keys(cart).map(item => {
-                        const [price, qty] = cart[item];
+                        const cartItem = cart[item];
+                        const price = Array.isArray(cartItem) ? cartItem[0] : cartItem.price;
+                        const qty = Array.isArray(cartItem) ? cartItem[1] : (cartItem.quantity ?? cartItem.qty);
                         return (
                           <div key={item} className="flex justify-between items-center p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors group">
                             <div>
@@ -403,7 +409,7 @@ export default function App() {
                   </TableHeader>
                   <TableBody>
                     {Object.keys(inventory).filter(item => {
-                      const [, , category = 'Other'] = inventory[item];
+                      const { category = 'Other' } = inventory[item];
                       return adminCategoryFilter === 'All' || category === adminCategoryFilter;
                     }).length === 0 ? (
                       <TableRow className="border-0">
@@ -418,7 +424,7 @@ export default function App() {
                       </TableRow>
                     ) : (
                       Object.keys(inventory).filter(item => {
-                        const [, , category = 'Other'] = inventory[item];
+                        const { category = 'Other' } = inventory[item];
                         return adminCategoryFilter === 'All' || category === adminCategoryFilter;
                       }).map(item => {
                         const [price, qty, category = 'Other'] = inventory[item];
