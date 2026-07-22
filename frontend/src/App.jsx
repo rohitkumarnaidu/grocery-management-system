@@ -11,6 +11,7 @@ import OrderRowSkeleton from '@/components/OrderRowSkeleton';
 import ExportButton from '@/components/ui/ExportButton';
 import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -43,6 +44,7 @@ export default function App() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [analyticsData, setAnalyticsData] = useState(null);
 
   const [newItem, setNewItem] = useState('');
   const [newPrice, setNewPrice] = useState('');
@@ -87,9 +89,23 @@ export default function App() {
     setTimeout(() => setActionToast(null), 3000);
   };
 
+  const loadAnalytics = async () => {
+    try {
+      const res = await fetch(`${API_URL}/admin/analytics`);
+      if (res.ok) setAnalyticsData(await res.json());
+    } catch (e) {
+      console.error('Analytics API Error:', e);
+    }
+  };
+
   useEffect(() => {
     loadData(true);
   }, []);
+
+  // Fetch analytics whenever the admin view becomes active
+  useEffect(() => {
+    if (view === 'admin') loadAnalytics();
+  }, [view]);
 
   // Sync view with hash changes (back/forward navigation + direct URL edits)
   useEffect(() => {
@@ -707,6 +723,9 @@ export default function App() {
                 )
               )}
             </div>
+            {/* Analytics Dashboard — above Order Ledger */}
+            <AnalyticsDashboard analyticsData={analyticsData} />
+
             <div className="bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-xl rounded-3xl p-8 shadow-sm">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-7">
                 <div className="flex items-center gap-3">

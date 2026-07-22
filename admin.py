@@ -180,8 +180,15 @@ def verify_admin_login(input_password):
 
 def get_sales_analytics():
     """
-    Compiles sales analytics (total orders, total revenue, popular items, category breakdown).
+    Compiles sales analytics including:
+    - Total orders and total revenue
+    - Best-selling products
+    - Revenue by category (dict)
+    - revenue_last_7_days: [{date, revenue}] for the last 7 calendar days
+    - quantity_by_category: [{category, quantity}] for pie chart
     """
+    from datetime import datetime, timedelta
+
     try:
         conn = database.get_db_connection()
         cursor = conn.cursor()
@@ -211,12 +218,50 @@ def get_sales_analytics():
         """)
         category_revenue = {row['category']: round(row['cat_revenue'], 2) for row in cursor.fetchall()}
 
+        # 4. Revenue per day for the last 7 days (for Line Chart)
+        # Orders store timestamps as ISO strings; extract the date portion for grouping.
+        cursor.execute("""
+            SELECT substr(timestamp, 1, 10) as order_date, SUM(total) as daily_revenue
+            FROM orders
+            WHERE timestamp >= date('now', '-6 days')
+            GROUP BY order_date
+            ORDER BY order_date ASC
+        """)
+        daily_rows = {row['order_date']: round(row['daily_revenue'], 2) for row in cursor.fetchall()}
+
+        # Build a complete 7-day list, filling zeros for missing days
+        today = datetime.utcnow().date()
+        revenue_last_7_days = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            day_str = day.isoformat()          # "YYYY-MM-DD"
+            label = day.strftime("%b %d")       # "Jul 22" — readable X-axis label
+            revenue_last_7_days.append({
+                "date": label,
+                "revenue": daily_rows.get(day_str, 0.0)
+            })
+
+        # 5. Total quantity sold per category (for Pie Chart)
+        cursor.execute("""
+            SELECT p.category, SUM(oi.quantity) as qty_sold
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            GROUP BY p.category
+            ORDER BY qty_sold DESC
+        """)
+        quantity_by_category = [
+            {"category": row['category'], "quantity": row['qty_sold']}
+            for row in cursor.fetchall()
+        ]
+
         conn.close()
         return {
             "total_revenue": round(total_revenue, 2),
             "total_orders": total_orders,
             "best_selling_products": best_sellers,
-            "revenue_by_category": category_revenue
+            "revenue_by_category": category_revenue,
+            "revenue_last_7_days": revenue_last_7_days,
+            "quantity_by_category": quantity_by_category
         }
     except Exception as e:
         print(f"Database error in get_sales_analytics: {e}")
@@ -224,5 +269,7 @@ def get_sales_analytics():
             "total_revenue": 0.0,
             "total_orders": 0,
             "best_selling_products": [],
-            "revenue_by_category": {}
+            "revenue_by_category": {},
+            "revenue_last_7_days": [],
+            "quantity_by_category": []
         }
