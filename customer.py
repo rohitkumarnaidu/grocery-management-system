@@ -17,59 +17,40 @@ def get_cart():
         return {}
 
 def add_item(item, quantity):
-    if quantity <= 0:
-        return False, "Quantity must be greater than zero"
-    data = database.load_data()
-    item = item.lower()
-    
-    # using 'products' in place of 'prod'
-    if item not in data.get("products", {}):
-        return False, "Product does not exist in inventory"
-        
-    # UPDATED: Swapped out indices [0] and [1] for self-documenting dictionary keys
-    price = data["products"][item]["price"]
-    available_stock = data["products"][item]["quantity"]
-    
-    # Track what is already sitting in the cart
-    current_cart_qty = 0
-    if "cart" in data and item in data["cart"]:
-        current_cart_qty = data["cart"][item][1]
-        
-    # Stock Validation Guard
-    if current_cart_qty + quantity > available_stock:
-        return False, f"Cannot add quantity. Only {available_stock} items available in stock, and you have {current_cart_qty} in your cart."
     """
     Adds a specified quantity of a product to the cart.
     """
+    if quantity <= 0:
+        return False, "Quantity must be greater than zero"
     item = item.strip().lower()
     try:
         conn = database.get_db_connection()
         cursor = conn.cursor()
-        
+
         # Check product existence and available stock
-        cursor.execute("SELECT id, price, quantity FROM products WHERE name = ?", (item,))
+        cursor.execute("SELECT id, price, quantity FROM products WHERE name = ? AND archived = 0", (item,))
         prod = cursor.fetchone()
         if not prod:
             conn.close()
             return False, "Product does not exist in inventory"
-            
+
         pid = prod['id']
         available_stock = prod['quantity']
-        
+
         # Check current cart quantity
         cursor.execute("SELECT quantity FROM cart WHERE product_id = ?", (pid,))
         cart_row = cursor.fetchone()
         current_cart_qty = cart_row['quantity'] if cart_row else 0
-        
+
         if current_cart_qty + quantity > available_stock:
             conn.close()
             return False, f"Cannot add quantity. Only {available_stock} items available in stock, and you have {current_cart_qty} in your cart."
-            
+
         if cart_row:
             cursor.execute("UPDATE cart SET quantity = quantity + ? WHERE product_id = ?", (quantity, pid))
         else:
             cursor.execute("INSERT INTO cart (product_id, quantity) VALUES (?, ?)", (pid, quantity))
-            
+
         conn.commit()
         conn.close()
         return True, "Added to cart"
@@ -90,12 +71,12 @@ def delete_item(item):
             conn.close()
             return False, "Product not in cart"
         pid = prod['id']
-        
+
         cursor.execute("SELECT quantity FROM cart WHERE product_id = ?", (pid,))
         if not cursor.fetchone():
             conn.close()
             return False, "Product not in cart"
-            
+
         cursor.execute("DELETE FROM cart WHERE product_id = ?", (pid,))
         conn.commit()
         conn.close()
@@ -119,24 +100,24 @@ def update_item_qty(item, quantity):
             return False, "Item not in cart"
         pid = prod['id']
         available_stock = prod['quantity']
-        
+
         cursor.execute("SELECT quantity FROM cart WHERE product_id = ?", (pid,))
         cart_row = cursor.fetchone()
         if not cart_row:
             conn.close()
             return False, "Item not in cart"
-            
+
         if quantity <= 0:
             cursor.execute("DELETE FROM cart WHERE product_id = ?", (pid,))
             conn.commit()
             conn.close()
             return True, f"Removed '{item}' from cart."
-            
+
         # Check stock bounds
         if quantity > available_stock:
             conn.close()
             return False, f"Cannot update quantity. Only {available_stock} items available in stock."
-            
+
         cursor.execute("UPDATE cart SET quantity = ? WHERE product_id = ?", (quantity, pid))
         conn.commit()
         conn.close()
@@ -145,20 +126,6 @@ def update_item_qty(item, quantity):
         return False, f"Database error in update_item_qty: {e}"
 
 def view_total_price():
-    data = database.load_data()
-    cart = data.get("cart", {})
-    products = data.get("products", {})
-    total_price = 0
-    for item in cart:
-        qty = cart[item][1] if isinstance(cart[item], list) else cart[item].get("quantity", 0)
-        price = 0.0
-        if item in products:
-            prod_details = products[item]
-            price = prod_details.get("price", 0.0) if isinstance(prod_details, dict) else (prod_details[0] if len(prod_details) > 0 else 0.0)
-        else:
-            price = cart[item][0] if isinstance(cart[item], list) else cart[item].get("price", 0.0)
-        total_price += price * qty
-    return total_price
     """
     Computes total price of items currently in the cart.
     """
@@ -166,8 +133,8 @@ def view_total_price():
         conn = database.get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT SUM(c.quantity * p.price) 
-            FROM cart c 
+            SELECT SUM(c.quantity * p.price)
+            FROM cart c
             JOIN products p ON c.product_id = p.id
         """)
         row = cursor.fetchone()
@@ -185,7 +152,7 @@ def checkout():
     try:
         conn = database.get_db_connection()
         cursor = conn.cursor()
-        
+
         # Fetch cart items with product details
         cursor.execute("""
             SELECT c.product_id, c.quantity, p.name, p.price, p.quantity as stock
@@ -196,23 +163,23 @@ def checkout():
         if not cart_items:
             conn.close()
             return False, "Cart is empty"
-            
+
         # Stock verification check
         unavailable_items = []
         for item in cart_items:
             if item['stock'] < item['quantity']:
                 unavailable_items.append(item['name'])
-                
+
         if unavailable_items:
             conn.close()
             return False, f"Checkout failed. The following items went out of stock or have insufficient inventory: {', '.join(unavailable_items)}. Please adjust your cart."
-            
+
         # Insert orders, order items, and deduct stock
         total = 0.0
         items_list = []
         order_id = str(uuid.uuid4())[:8].upper()
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        
+
         for item in cart_items:
             item_total = item['price'] * item['quantity']
             total += item_total
@@ -220,14 +187,14 @@ def checkout():
             cursor.execute("UPDATE products SET quantity = quantity - ? WHERE id = ?", (item['quantity'], item['product_id']))
             # Add to receipt items
             items_list.append({"item": item['name'], "price": item['price'], "qty": item['quantity']})
-            
+
         # Insert Order
         cursor.execute("INSERT INTO orders (id, timestamp, total) VALUES (?, ?, ?)", (order_id, timestamp, total))
-        
+
         # Insert Order Items
         for item in cart_items:
             cursor.execute("INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)", (order_id, item['product_id'], item['quantity']))
-            
+
         # Clear Cart
         cursor.execute("DELETE FROM cart")
         
@@ -254,10 +221,10 @@ def search_and_filter_products(query_name=None, min_price=None, max_price=None, 
     try:
         conn = database.get_db_connection()
         cursor = conn.cursor()
-        
-        query = "SELECT name, price, quantity, category FROM products WHERE 1=1"
+
+        query = "SELECT name, price, quantity, category, image_url FROM products WHERE 1=1 AND archived = 0"
         params = []
-        
+
         if query_name:
             query += " AND name LIKE ?"
             params.append(f"%{query_name.lower()}%")
@@ -270,13 +237,13 @@ def search_and_filter_products(query_name=None, min_price=None, max_price=None, 
         if category:
             query += " AND category = ?"
             params.append(category)
-            
+
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        
+
         results = {}
         for row in rows:
-            results[row['name']] = [row['price'], row['quantity'], row['category']]
+            results[row['name']] = [row['price'], row['quantity'], row['category'], row['image_url']]
         conn.close()
         return results
     except Exception as e:
@@ -290,7 +257,7 @@ def generate_receipt_file(order):
     """
     os.makedirs("receipts", exist_ok=True)
     filename = f"receipts/receipt_{order['id']}.txt"
-    
+
     with open(filename, "w", encoding="utf-8") as f:
         f.write("=========================================\n")
         f.write("          GROCERY MANAGEMENT SYSTEM      \n")
@@ -300,22 +267,22 @@ def generate_receipt_file(order):
         f.write("-----------------------------------------\n")
         f.write(f"{'Item':<18} {'Qty':<5} {'Price':<8} {'Total':<8}\n")
         f.write("-----------------------------------------\n")
-        
+
         for item in order["items"]:
             name = item["item"].strip().capitalize()
             if len(name) > 16:
                 name = name[:13] + "..."
-                
+
             qty = item["qty"]
             price = item["price"]
             item_total = price * qty
-            
+
             f.write(f"{name:<18} {qty:<5} Rs.{price:<5.2f} Rs.{item_total:<6.2f}\n")
-            
+
         f.write("-----------------------------------------\n")
         f.write(f"{'Grand Total':<30} Rs.{order['total']:.2f}\n")
         f.write("=========================================\n")
         f.write("        Thank you for shopping with us!   \n")
         f.write("=========================================\n")
-        
+
     return filename

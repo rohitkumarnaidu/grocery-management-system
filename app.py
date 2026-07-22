@@ -7,7 +7,7 @@ import database
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 connected_admins = set()
 
@@ -28,6 +28,11 @@ def emit_stock_alert(product_name, remaining_qty):
 # SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
 @app.before_request
 def authenticate_admin():
+    # Always allow CORS preflight (OPTIONS) requests through — browsers send these
+    # before any POST/PUT/DELETE and they do not carry custom headers like X-Admin-Password.
+    if request.method == 'OPTIONS':
+        return None
+
     admin_protected = (
         (request.path.startswith('/api/products') and request.method != 'GET') or
         request.path.endswith('/restore') or
@@ -35,11 +40,6 @@ def authenticate_admin():
     )
     if admin_protected:
         admin_password = request.headers.get('X-Admin-Password')
-        
-        # if admin_password != 'admin123':
-        #     return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
-
-        # Fallback to the original plaintext check to keep Issue #11 isolated and functional
         if admin_password != 'admin123':
             return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
 @app.route('/')
@@ -83,6 +83,7 @@ def admin_login():
 def add_product():
     data = request.json
     category = data.get('category', 'Other')
+    image_url = data.get('image_url', '')
     try:
         price = float(data['price'])
         quantity = int(data['qty'])  # Kept 'qty' for incoming frontend key compatibility
@@ -90,7 +91,7 @@ def add_product():
             return jsonify({"success": False, "message": "Price and quantity cannot be negative"}), 400
     except (ValueError, TypeError, KeyError):
         return jsonify({"success": False, "message": "Invalid input: Price must be a number and Quantity must be an integer"}), 400
-    success, message = admin.add_product(data['item'], price, quantity, category)
+    success, message = admin.add_product(data['item'], price, quantity, category, image_url)
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>/price', methods=['PUT'])
@@ -260,4 +261,4 @@ def search_products():
     )
     return jsonify(results)
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
