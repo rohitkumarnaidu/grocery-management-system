@@ -1,25 +1,47 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from sympy import false
+from flask_socketio import SocketIO, emit
 import admin
 import customer
 import database
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+connected_admins = set()
+
+@socketio.on('connect')
+def handle_connect():
+    connected_admins.add(request.sid)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    connected_admins.discard(request.sid)
+
+def emit_stock_alert(product_name, remaining_qty):
+    if remaining_qty == 0:
+        socketio.emit('stock:out', {'product_name': product_name})
+    else:
+        socketio.emit('stock:low', {'product_name': product_name, 'remaining_qty': remaining_qty})
 
 # SECURING ALL ENDPOINTS WITH A SIMPLE PASSWORD GUARD FOR ADMIN ROUTES
 @app.before_request
 def authenticate_admin():
-    if request.path.startswith('/api/products') and request.method != 'GET':
-        admin_password = request.headers.get('X-Admin-Password')
-        
-        # if admin_password != 'admin123':
-        #     return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
+    # Always allow CORS preflight (OPTIONS) requests through — browsers send these
+    # before any POST/PUT/DELETE and they do not carry custom headers like X-Admin-Password.
+    if request.method == 'OPTIONS':
+        return None
 
-        # Fallback to the original plaintext check to keep Issue #11 isolated and functional
+    admin_protected = (
+        (request.path.startswith('/api/products') and request.method != 'GET') or
+        request.path.endswith('/restore') or
+        request.path.endswith('/permanent')
+    )
+    if admin_protected:
+        admin_password = request.headers.get('X-Admin-Password')
         if admin_password != 'admin123':
-            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401     
+            return jsonify({"success": False, "message": "Unauthorized: Invalid or missing admin password"}), 401
 @app.route('/')
 def index():
     return jsonify({"status": "API is running"})
@@ -28,9 +50,10 @@ def index():
 
 @app.route('/api/products', methods=['GET'])
 def get_products():
-    # Fetch data safely from the central database schema
-    data = database.load_data()
-    return jsonify(data.get("products", {}))
+    try:
+        return jsonify(database.get_all_products())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
 
 # Track failed login attempts globally
 failed_attempts = 0
@@ -60,6 +83,7 @@ def admin_login():
 def add_product():
     data = request.json
     category = data.get('category', 'Other')
+    image_url = data.get('image_url', '')
     try:
         price = float(data['price'])
         quantity = int(data['qty'])  # Kept 'qty' for incoming frontend key compatibility
@@ -67,7 +91,7 @@ def add_product():
             return jsonify({"success": False, "message": "Price and quantity cannot be negative"}), 400
     except (ValueError, TypeError, KeyError):
         return jsonify({"success": False, "message": "Invalid input: Price must be a number and Quantity must be an integer"}), 400
-    success, message = admin.add_product(data['item'], price, quantity, category)
+    success, message = admin.add_product(data['item'], price, quantity, category, image_url)
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>/price', methods=['PUT'])
@@ -107,8 +131,29 @@ def update_qty(item):
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/products/<item>', methods=['DELETE'])
-def delete_product(item):
-    success, message = admin.delete_item(item)
+def archive_product(item):
+    """Archives a product (soft-delete) — replaces permanent delete for safety."""
+    success, message = admin.archive_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/archived', methods=['GET'])
+def get_archived_products():
+    """Returns all archived products for the admin archive panel."""
+    try:
+        return jsonify(database.get_archived_products())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
+
+@app.route('/api/products/<item>/restore', methods=['POST'])
+def restore_product(item):
+    """Restores an archived product back to active inventory."""
+    success, message = admin.restore_product(item)
+    return jsonify({"success": success, "message": message})
+
+@app.route('/api/products/<item>/permanent', methods=['DELETE'])
+def permanently_delete_product(item):
+    """Permanently deletes an archived product. Irreversible."""
+    success, message = admin.permanently_delete_product(item)
     return jsonify({"success": success, "message": message})
 
 # --- Customer API ---
@@ -148,14 +193,56 @@ def remove_from_cart(item):
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
-    success, message = customer.checkout()
+    res = customer.checkout()
+    if isinstance(res, tuple) and len(res) == 3:
+        success, message, checked_out_items = res
+    else:
+        success, message = res
+        checked_out_items = []
+        
+    if success:
+        for item in checked_out_items:
+            name = item.get("product_name")
+            qty = item.get("remaining_qty")
+            if qty == 0:
+                emit_stock_alert(name, 0)
+            elif qty <= 5:
+                emit_stock_alert(name, qty)
+                
     return jsonify({"success": success, "message": message})
 
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
+    try:
+        return jsonify(database.get_all_orders())
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Database error: {e}"}), 500
+
+@app.route('/api/orders/export', methods=['GET'])
+def export_orders_csv():
+    import io
+    import csv
+    from flask import Response
+    
     data = database.load_data()
     orders = data.get("orders", [])
-    return jsonify(orders)
+    
+    si = io.StringIO()
+    cw = csv.writer(si)
+    
+    cw.writerow(['Order ID', 'Timestamp', 'Items', 'Total ($)'])
+    for order in orders:
+        items_str = ", ".join([f"{item.get('qty')}x {item.get('item')}" for item in order.get("items", [])])
+        cw.writerow([
+            order.get('id', ''),
+            order.get('timestamp', ''),
+            items_str,
+            f"{order.get('total', 0.0):.2f}"
+        ])
+    
+    response = Response(si.getvalue(), mimetype='text/csv')
+    response.headers['Content-Disposition'] = 'attachment; filename=orders-export.csv'
+    return response
 
 # --- Search & Filter API ---
 @app.route('/api/products/filter', methods=['GET'])
@@ -174,4 +261,4 @@ def search_products():
     )
     return jsonify(results)
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
