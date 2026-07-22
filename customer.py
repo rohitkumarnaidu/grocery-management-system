@@ -197,6 +197,8 @@ def checkout():
 
         # Clear Cart
         cursor.execute("DELETE FROM cart")
+        
+        #Complete the checkout transaction after clearing the cart.
         conn.commit()
         conn.close()
 
@@ -206,10 +208,9 @@ def checkout():
             "items": items_list,
             "total": total
         }
-
         receipt_path = generate_receipt_file(order)
-        checked_out_items = [{"product_name": item["name"], "remaining_qty": item["stock"] - item["quantity"]} for item in cart_items]
-        return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}", checked_out_items
+        return True, f"Checkout successful! Invoice generated at {receipt_path}. Total: Rs.{order['total']}"
+
     except Exception as e:
         return False, f"Database error during checkout: {e}"
 
