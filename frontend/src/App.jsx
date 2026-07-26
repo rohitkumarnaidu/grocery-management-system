@@ -349,7 +349,7 @@ export default function App() {
                       const [, , category = 'Other'] = inventory[item];
                       return selectedCategory === 'All' || category === selectedCategory;
                     }).map(item => {
-                      const [price, qty, category = 'Other'] = inventory[item];
+                      const [price, qty, category = 'Other', imageUrl = ''] = inventory[item];
                       return (
                         <div key={item} className="group relative border border-slate-200/60 dark:border-slate-700/60 rounded-2xl overflow-hidden bg-white dark:bg-slate-800/80 hover:border-violet-300 dark:hover:border-violet-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 transition-all duration-400 flex flex-col">
                           
