@@ -261,6 +261,13 @@ export default function App() {
             </div>
             Stock Smart
           </div>
+
+          {/* NEW: search bar, only makes sense on the Shop view */}
+          {view === 'customer' && (
+      <div className="w-full md:w-auto md:flex-1 md:max-w-md">
+        <SearchBar value={searchQuery} onSearch={setSearchQuery} />
+        </div>
+      )} 
           <div className="flex items-center gap-3">
             <nav className="flex gap-1.5 p-1.5 bg-slate-100/80 dark:bg-slate-800/80 rounded-full border border-slate-200/50 dark:border-slate-700/50">
               <button 
@@ -316,9 +323,6 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="mb-6">
-                  <SearchBar value={searchQuery} onSearch={setSearchQuery} />
-                </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {isLoading ? (
