@@ -323,9 +323,6 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="mb-6">
-                  <SearchBar value={searchQuery} onSearch={setSearchQuery} />
-                </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {isLoading ? (
