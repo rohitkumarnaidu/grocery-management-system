@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf, Archive, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf, Archive, RotateCcw, AlertTriangle, Download } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
@@ -12,6 +12,7 @@ import ExportButton from '@/components/ui/ExportButton';
 import NotificationBell from '@/components/NotificationBell';
 import SearchBar from '@/components/SearchBar';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import { downloadReceiptPdf } from '@/lib/receipt';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -489,6 +490,14 @@ export default function App() {
                       <div className="text-emerald-600 font-extrabold text-lg bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100">
                         ${order.total.toFixed(2)}
                       </div>
+                      <button
+                        onClick={() => downloadReceiptPdf(order)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Receipt
+                        </button>
+                        
                     </div>
                   ))}
                 </div>
