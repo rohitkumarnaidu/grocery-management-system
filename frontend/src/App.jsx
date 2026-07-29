@@ -54,6 +54,7 @@ export default function App() {
   const [newImageUrl, setNewImageUrl] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sortOrder, setSortOrder] = useState('none'); // 'none' | 'asc' | 'desc'
   const [adminCategoryFilter, setAdminCategoryFilter] = useState('All');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [archivedProducts, setArchivedProducts] = useState([]);
@@ -316,12 +317,24 @@ export default function App() {
                     </div>
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Fresh Products</h2>
                   </div>
+                  <div className="flex items-center gap-4">
+                    <select
+                      value={sortOrder}
+                      onChange={e => setSortOrder(e.target.value)}
+                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-xl px-3 py-2 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400"
+                      >
+                      <option value="none">Sort: Default</option>
+                      <option value="asc">Price: Low to High</option>
+                      <option value="desc">Price: High to Low</option>
+                    </select>
+                  
                   <span className="text-sm text-slate-400 font-medium">
                     {Object.keys(inventory).filter(item => {
                       const [, , category = 'Other'] = inventory[item];
                       return selectedCategory === 'All' || category === selectedCategory;
                     }).length} items
                   </span>
+                </div>
                 </div>
 
                 
@@ -352,7 +365,14 @@ export default function App() {
                   ) : (
                     Object.keys(inventory).filter(item => {
                       const [, , category = 'Other'] = inventory[item];
-                      return selectedCategory === 'All' || category === selectedCategory;
+                      const matchesCategory = selectedCategory === 'All' || category === selectedCategory;
+                      const matchesSearch = item.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    }).sort((a, b) => {
+                      if (sortOrder === 'none') return 0;
+                      const priceA = inventory[a][0];
+                      const priceB = inventory[b][0];
+                      return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
                     }).map(item => {
                       const [price, qty, category = 'Other', imageUrl = ''] = inventory[item];
                       return (
