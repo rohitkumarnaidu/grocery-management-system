@@ -291,16 +291,16 @@ export default function App() {
         {view === 'customer' && (
           <>
             {/* Category Filter Pills */}
-            <div className="mb-8 flex flex-wrap gap-2.5 justify-center max-w-5xl mx-auto">
+            <div className="mb-8 flex items-center gap-2 overflow-x-auto w-full px-1 py-1">
               <button 
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === 'All' ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 border ${selectedCategory === 'All' ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
                 onClick={() => setSelectedCategory('All')}>
                 ✨ All
               </button>
               {CATEGORIES.map(cat => (
                 <button 
                   key={cat} 
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border ${selectedCategory === cat ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 border ${selectedCategory === 'All' ? 'bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-600/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 shadow-sm'}`}
                   onClick={() => setSelectedCategory(cat)}>
                   {CATEGORY_EMOJI[cat]} {cat}
                 </button>
