@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf, Archive, RotateCcw, AlertTriangle, Download } from 'lucide-react';
+import { Store, ShoppingCart, Package, Plus, Trash2, Sparkles, Clock, Receipt, Search, ChevronRight, Leaf, Archive, RotateCcw, AlertTriangle, Download, Heart } from 'lucide-react';
 import UiverseButton from '@/components/UiverseButton';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotFound from '@/pages/NotFound';
@@ -33,6 +33,7 @@ const CATEGORY_EMOJI = {
 const getViewFromHash = () => {
   const hash = window.location.hash;
   if (hash === '#/admin') return 'admin';
+  if (hash === '#/wishlist') return 'wishlist';
   if (!hash || hash === '#/' || hash === '#/shop') return 'customer';
   return 'notfound';
 };
@@ -55,6 +56,7 @@ export default function App() {
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortOrder, setSortOrder] = useState('none'); // 'none' | 'asc' | 'desc'
+  const [wishlist, setWishlist] = useState([]); // array of item names
   const [adminCategoryFilter, setAdminCategoryFilter] = useState('All');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [archivedProducts, setArchivedProducts] = useState([]);
@@ -124,6 +126,12 @@ export default function App() {
       body: JSON.stringify({ item, qty: 1 })
     });
     loadData();
+  };
+
+  const toggleWishlist = (item) => {
+    setWishlist(prev =>
+      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
+    );
   };
 
   const updateCartQty = async (item, qty) => {
@@ -280,6 +288,14 @@ export default function App() {
               <button 
                 className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 onClick={() => { window.location.hash = '#/admin'; }}>
+                <Heart className="w-4 h-4" /> Wishlist
+                {wishlist.length > 0 && (
+                  <span className="bg-violet-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{wishlist.length}</span>
+                )}
+              </button>
+              <button 
+                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-md shadow-slate-200/50' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
+                onClick={() => { window.location.hash = '#/admin'; }}>
                 📊 Dashboard
               </button>
             </nav>
@@ -379,21 +395,48 @@ export default function App() {
                         <div key={item} className="group relative border border-slate-200/60 dark:border-slate-700/60 rounded-2xl overflow-hidden bg-white dark:bg-slate-800/80 hover:border-violet-300 dark:hover:border-violet-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100/50 dark:hover:shadow-violet-900/30 transition-all duration-400 flex flex-col">
                           
                           {/* Product Image */}
+                          
                           <div className="w-full h-36 bg-gradient-to-br from-slate-100 to-violet-50 dark:from-slate-700 dark:to-violet-900/30 flex items-center justify-center overflow-hidden relative">
+
+                         {/* Wishlist button */}
+                            <button
+                              type="button"
+                              onClick={() => toggleWishlist(item)}
+                              className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+                              title={wishlist.includes(item) ? 'Remove from wishlist' : 'Add to wishlist'}
+                              >
+                              <Heart
+                                className={`w-4 h-4 ${
+                                  wishlist.includes(item)
+                                  ? 'fill-red-500 text-red-500'
+                                  : 'text-slate-400'
+                                }`}
+                                />
+                            </button>
+                            {/* Product image */}
                             {imageUrl ? (
-                              <img
-                                src={imageUrl}
-                                alt={item}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
+                          <>
+                            <img
+                              src={imageUrl}
+                              alt={item}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling.style.display = 'flex';
+                              }}
                               />
-                            ) : null}
                             <div
-                              className="absolute inset-0 flex items-center justify-center text-5xl"
-                              style={{ display: imageUrl ? 'none' : 'flex' }}
-                            >
+                              className="absolute inset-0 items-center justify-center text-5xl"
+                              style={{ display: 'none' }}
+                              >
                               {CATEGORY_EMOJI[category] || '📦'}
                             </div>
+                          </>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-5xl">
+                            {CATEGORY_EMOJI[category] || '📦'}
+                          </div>
+                        )}
                           </div>
 
                           <div className="p-5 flex flex-col flex-1">
