@@ -3,10 +3,14 @@
 # Each line is a file pattern followed by one or more owners.
 
 # Global owner(s) for the repository
-*       @vanshika114
+*                   @vanshika114
 
-# The frontend code is owned by the maintainer
-/frontend/      @vanshika114
+# Frontend 
+/frontend/          @vanshika114
 
-# The GitHub actions and templates are owned by the maintainer
-/.github/       @vanshika114
+# GitHub Actions, Workflows and Issue Templates
+/.github/           @vanshika114
+
+# Security and Documentation
+/SECURITY.md        @vanshika114
+/README.md          @vanshika114
