@@ -7,7 +7,19 @@ updates:
       interval: "weekly"
     assignees:
       - "vanshika114"
-    open-pull-requests-limit: 5
+    reviewers:
+      - "vanshika114"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
 
   # Maintain dependencies for Node.js frontend
   - package-ecosystem: "npm"
@@ -16,7 +28,19 @@ updates:
       interval: "weekly"
     assignees:
       - "vanshika114"
-    open-pull-requests-limit: 5
+    reviewers:
+      - "vanshika114"
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
 
   # Maintain GitHub Actions
   - package-ecosystem: "github-actions"
@@ -25,4 +49,16 @@ updates:
       interval: "weekly"
     assignees:
       - "vanshika114"
+    reviewers:
+      - "vanshika114"
+    labels:
+      - "dependencies"
+      - "actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     open-pull-requests-limit: 5
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"
